@@ -1,0 +1,3 @@
+GULP="node_modules/.bin/gulp"
+
+$GULP $@
