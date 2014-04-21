@@ -1,0 +1,36 @@
+{
+  "name": "super-stream",
+  "version": "0.0.0",
+  "description": "Transform stream utilities",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "streams",
+    "Transform",
+    "Duplex",
+    "through",
+    "map",
+    "Promise",
+    "pipeline",
+    "Stream"
+  ],
+  "author": "me",
+  "license": "MIT",
+  "dependencies": {
+    "coffee-script": "^1.7.1",
+    "core-util-is": "^1.0.1",
+    "plexer": "0.0.2",
+    "readable-stream": "^1.0.27-1",
+    "through2": "^0.4.1"
+  },
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "gulp": "^3.6.1",
+    "gulp-coffee": "^1.4.2",
+    "gulp-mocha": "^0.4.1",
+    "gulp-util": "^2.2.14",
+    "gulp-watch": "^0.6.2"
+  }
+}
