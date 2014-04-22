@@ -19,7 +19,7 @@ bindDomain = (stream, dom) ->
 
   return stream
 
-module.exports = (stream, userDomain) ->
+patch = (stream, userDomain) ->
   if not (stream instanceof Transform)
      return
 
@@ -28,8 +28,9 @@ module.exports = (stream, userDomain) ->
   else
     dom = domain.create()
     dom.on "error", (e) -> stream.emit "error", e
-    
     stream._domain = dom
 
   bindDomain stream, dom
   return stream
+
+module.exports = patch
