@@ -82,10 +82,11 @@ watchStream = ->
       .pipe through (f,e,n) ->
         if match(f.path, "**/spec/**")
           cmd ="./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{f.path} -R nyan -t 5000"
+          console.log ""
           st = shell cmd
           st.on "error", (e) -> console.log e.stack
           st.write('A')
-          
+
         @push f
         n()        
 
@@ -110,7 +111,6 @@ gulp.task "watch:spec", ->
   # returning task
   return gulp.src GLOBS.mocha.src
     .pipe watchStream()
-
 
 gulp.task "default", ["watch:spec", "watch:gulpfiles"]
 
