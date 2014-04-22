@@ -70,6 +70,8 @@ Thumbs.db
 **/.sass-cache
 **/bower_components
 
+**/coverage
+
 **/bak
 **/*-bak
 **/bak-*

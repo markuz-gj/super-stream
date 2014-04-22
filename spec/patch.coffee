@@ -1,11 +1,14 @@
 domain = require "domain"
 
-{Transform} = require "readable-stream"
+{Transform, Readable} = require "readable-stream"
 
 chai = require "chai"
-chai.should()
+sinon = require "sinon"
+chai.use require "sinon-chai"
+should = chai.should()
 
-patch = require "../patch"
+
+patch = require "../src/patch"
 
 C = {}
 class MyDomain
@@ -16,24 +19,34 @@ class MyDomain
 
 descObj = Object.create null
 
+
 descObj['patch(stream)'] = (done) ->
+  C.errSpy = sinon.spy()
   C.stream = new Transform()
   C.patchedStream = patch new Transform()
+  C.patchedStream.on "error", (e) -> C.errSpy "EE:stream"
   done()
 
 descObj['patch(stream, userDomain)'] = (done) ->
+  C.errSpy = sinon.spy()
   C.dom = new MyDomain()
+  C.dom.on "error", (e) ->C.errSpy "EE:domain"
+
   C.stream = new Transform()
   C.patchedStream = patch(new Transform(), C.dom)
   done()
+
+describe "exported value", ->
+    it 'should be a function', ->
+      patch.should.be.an.instanceof Function
 
 for desc, fn of descObj
   describe desc, ->
 
     beforeEach fn
 
-    it 'should be a function', ->
-      patch.should.be.an.instanceof Function
+    it "should accept only a Transform stream as 1st argument", ->
+      should.not.exist patch new Readable()
 
     it 'should return an instance of Transform', ->
       C.patchedStream.should.be.an.instanceof Transform
@@ -79,6 +92,39 @@ for desc, fn of descObj
           if fn instanceof Function
             fn.domain.should.not.have.property 'userDefined'
 
+    it 'should stream data to another Transform stream', ->
+      patchedStream = C.patchedStream
+      patchedStream2 = patch(new Transform(), C.dom)
+      chunk = new Buffer "same data"
+
+      patchedStream._transform = (f,e,n) ->
+        @push f
+        n()
+
+      patchedStream2._transform = (f,e,n) ->
+        should.equal f, chunk
+        @push f
+        n()
+
+      patchedStream.pipe patchedStream2
+      patchedStream.write(chunk)
+
+
+    it 'should err', ->
+      
+      for i, fn of C.patchedStream
+        if fn instanceof Function
+          # calling all methods with a wrong argument
+          C.patchedStream[i](Math.random())
+
+      if C.dom
+        C.errSpy.should.have.been.calledWith "EE:domain"
+      else
+        C.errSpy.should.have.been.calledWith "EE:stream"
+
+    
+
+return
 
 
 
