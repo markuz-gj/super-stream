@@ -19,7 +19,6 @@ class MyDomain
 
 descObj = Object.create null
 
-
 descObj['patch(stream)'] = (done) ->
   C.errSpy = sinon.spy()
   C.stream = new Transform()
@@ -37,13 +36,13 @@ descObj['patch(stream, userDomain)'] = (done) ->
   done()
 
 describe "exported value", ->
-    it 'should be a function', ->
-      patch.should.be.an.instanceof Function
+  it 'should be a function', ->
+    patch.should.be.an.instanceof Function
 
-for desc, fn of descObj
+for desc, runBefore of descObj
   describe desc, ->
 
-    beforeEach fn
+    beforeEach runBefore
 
     it "should accept only a Transform stream as 1st argument", ->
       should.not.exist patch new Readable()
@@ -109,9 +108,7 @@ for desc, fn of descObj
       patchedStream.pipe patchedStream2
       patchedStream.write(chunk)
 
-
     it 'should err', ->
-      
       for i, fn of C.patchedStream
         if fn instanceof Function
           # calling all methods with a wrong argument
@@ -121,8 +118,6 @@ for desc, fn of descObj
         C.errSpy.should.have.been.calledWith "EE:domain"
       else
         C.errSpy.should.have.been.calledWith "EE:stream"
-
-    
 
 return
 

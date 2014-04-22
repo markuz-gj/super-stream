@@ -48,14 +48,6 @@ GLOBS =
 #
 GLOBS.mocha.src = flatten [GLOBS.mocha.src, GLOBS.coffee.src]
 
-s = shell 'node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register spec/*.coffee' 
-
-c = shell './node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- --compilers coffee:coffee-script/register spec/*.coffee -R nyan -t 5000'
-
-# c.write('PP')
-# s.write("PPP").pipe through (f) ->
-#   console.log f
-
 rand = (n = 6) -> ~~(Math.random()*(10**n))
 
 ps = (str="-- #{rand 3} --") ->
@@ -80,13 +72,7 @@ watchStream = ->
       if fn instanceof Function
         mochaStream[i] = d.bind fn
 
-    # mochaStream.pipe ps("@@")
-
     return files
-      # .pipe ps('-----')
-      # .pipe istanbul()
-      # .pipe filter("!src/*")
-      # .pipe mochaStream
       .pipe through (f,e,n) ->
         f.base = path.dirname f.base
         @push f
@@ -97,17 +83,11 @@ watchStream = ->
         if match(f.path, "**/spec/**")
           cmd ="./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{f.path} -R nyan -t 5000"
           st = shell cmd
-          self = @
-          st.on "error", (e) ->
-            console.log e.stack
-            # self.push f
-            # n()
+          st.on "error", (e) -> console.log e.stack
           st.write('A')
+          
         @push f
         n()        
-      # .pipe ps("01:#{rand()}")
-
-      # .pipe istanbul.writeReports()
 
 gulp.task "watch:gulpfiles", ->
   cache = {}
@@ -127,35 +107,9 @@ gulp.task "watch:gulpfiles", ->
 
 gulp.task "watch:spec", ->
 
-
   # returning task
   return gulp.src GLOBS.mocha.src
     .pipe watchStream()
-    # .pipe ps("00:#{rand(3)}")
-
-    # .pipe through (f,e,n) ->
-    #   shell = require "gulp-shell"
-    #   cmd = "node_modules/mocha/bin/mocha dist/*.js -R nyan"
-    #   # cmd = "node_modules/mocha/bin/mocha "
-    #   console.log cmd
-    #   st = shell cmd
-    #   st.write("pp")
-    #   # st = shell "node_modules/mocha/bin/mocha -R nyan #{f.path}"
-    #   # st.write()
-    #   # c.write('pp')
-    #   @push f 
-    #   n()
-
-    # .pipe istanbul()
-
-    # .pipe through (f,e,n) ->
-    #   f.path = replaceExtension f.path, ".coffee"
-    #   @push f
-    #   n()
-    # # .pipe mocha()
-    # .pipe instanbul
-    # .pipe through (f,e,n) ->
-    #   # console.log f.contents.toString()
 
 
 gulp.task "default", ["watch:spec", "watch:gulpfiles"]
