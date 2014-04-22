@@ -3,10 +3,6 @@ domain = require "domain"
 
 {isFunction} = require "core-util-is"
 
-class BaseDomain
-  constructor: ->
-    return domain.create()
-
 isTransform = ->
   return true
 
@@ -17,8 +13,9 @@ module.exports = (stream, userDomain) ->
   if userDomain instanceof domain.Domain
     dom = userDomain
   else
-    dom = new BaseDomain()
+    dom = domain.create()
     dom.on "error", (e) -> console.log "EE:patch domain", e
+
 
   if isTransform stream
     for i, fn of stream
