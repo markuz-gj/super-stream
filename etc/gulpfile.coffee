@@ -1,14 +1,16 @@
 path = require "path"
 domain = require "domain"
+{exec} = require "child_process"
 
 gulp = require "gulp"
 {log, colors, replaceExtension} = require "gulp-util"
 {red, bold} = colors
+
 coffee = require "gulp-coffee"
 mocha = require "gulp-mocha"
 watch = require "gulp-watch"
 through = require("through2").obj
-shell = require "gulp-shell"
+# shell = require "gulp-shell"
 match = require "minimatch"
 # es = require "event-stream"
 # grep = require "gulp-grep-stream"
@@ -64,31 +66,84 @@ d.on "error", (e) ->
   console.log e.stack
   console.log "EE:mocha", ~~(Math.random()*(10**4))
 
-watchStream = ->
-  return watch {emit: 'all'}, (files) -> 
+# watchStream = ->
+#   return watch (files) -> 
+#     return files
+#       .pipe through (f,e,n) ->
+#         f.base = path.dirname f.base
+#         @push f
+#         n()
+#       .pipe coffee {bare: on}
+#       .pipe gulp.dest "./#{DIST}/"
+#       .pipe through (f,e,n) ->
+#         if match(f.path, "**/spec/**")
+#           console.log f.path
+#           cmd ="./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{f.path} -R dot -t 5000"
+#           console.log ""
+#           st = shell cmd
+#           st.on "error", (e) -> console.log "EE:istanbul", e.stack
+#           st.write('')
+#           st.end()
 
-    mochaStream = mocha {reporters:'Nyan'}
-    for i, fn of mochaStream
-      if fn instanceof Function
-        mochaStream[i] = d.bind fn
+#         @push f
+#         n() 
 
-    return files
-      .pipe through (f,e,n) ->
-        f.base = path.dirname f.base
+gulp.task "watch:spec", ->
+  cache = {}
+  return gulp.src GLOBS.mocha.src
+    .pipe watch()
+
+    .pipe through (f,e,n) ->
+      f.base = path.dirname f.base
+      @push f
+      n()
+    .pipe coffee {bare: yes, sourceMap: yes}
+    .pipe through (f,e,n) ->
+      @push f
+      n()
+    .pipe gulp.dest "./#{DIST}/"
+    
+    .pipe through (f,e,n) ->
+      @push f; n()
+      firstTime = !cache[f.path]
+
+      if firstTime
+        if match(f.path, "**/src/**")
+          # making pointing to the right spec
+          dir = path.dirname(f.path).replace(/src$/, 'spec')
+          cache[f.path] = path.join dir, path.basename(f.path)
+          return
+        else
+          cache[f.path] = f.path
+
+      cmd = "./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 5000"
+      # cmd ="./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 5000"
+      st = exec cmd
+
+      cache.stdout ?= []
+      cache.stderr ?= []
+
+      st.stdout.pipe through (f, e, n) ->
+        cache.stdout.push f
         @push f
         n()
-      .pipe coffee {bare: on}
-      .pipe gulp.dest "./#{DIST}/"
-      .pipe through (f,e,n) ->
-        if match(f.path, "**/spec/**")
-          cmd ="./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{f.path} -R nyan -t 5000"
-          console.log ""
-          st = shell cmd
-          st.on "error", (e) -> console.log e.stack
-          st.write('A')
 
+      st.stderr.pipe through (f, e, n) ->
+        cache.stderr.push f
         @push f
-        n()        
+        n()
+
+      st.on "close", (exitCode) ->
+        console.log cache.stdout.join ""
+        console.log cache.stderr.join ""
+        cache.stdout = []
+        cache.stderr = []
+    
+    # .pipe through (f,e,n) ->
+    #   console.log "BB", f.path 
+    #   @push f
+    #   n()
+
 
 gulp.task "watch:gulpfiles", ->
   cache = {}
@@ -105,12 +160,6 @@ gulp.task "watch:gulpfiles", ->
   return gulp.src GLOBS.gulpfiles.src
     .pipe watch {emitOnGlob: no}
     .pipe job 
-
-gulp.task "watch:spec", ->
-
-  # returning task
-  return gulp.src GLOBS.mocha.src
-    .pipe watchStream()
 
 gulp.task "default", ["watch:spec", "watch:gulpfiles"]
 

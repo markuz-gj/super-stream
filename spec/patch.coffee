@@ -7,7 +7,6 @@ sinon = require "sinon"
 chai.use require "sinon-chai"
 should = chai.should()
 
-
 patch = require "../src/patch"
 
 C = {}

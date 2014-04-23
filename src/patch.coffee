@@ -1,7 +1,9 @@
 domain = require "domain"
 {Transform} = require "readable-stream"
 
-{isFunction, isObject} = require "core-util-is"
+# {isFunction, isObject} = require "core-util-is"
+isFunction = require "lodash-node/modern/objects/isFunction"
+isObject = require "lodash-node/modern/objects/isObject"
 cloneDeep = require "lodash-node/modern/objects/cloneDeep"
 
 bindDomain = (stream, dom) ->
