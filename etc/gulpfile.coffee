@@ -4,6 +4,7 @@ domain = require "domain"
 {puts} = require "util"
 
 gulp = require "gulp"
+gutil = require "gulp-util"
 {log, colors, replaceExtension} = require "gulp-util"
 {red, bold} = colors
 
@@ -58,44 +59,19 @@ d.on "error", (e) ->
   puts e.stack
   puts "EE:mocha", ~~(Math.random()*(10**4))
 
-# watchStream = ->
-#   return watch (files) -> 
-#     return files
-#       .pipe through (f,e,n) ->
-#         f.base = path.dirname f.base
-#         @push f
-#         n()
-#       .pipe coffee {bare: on}
-#       .pipe gulp.dest "./#{DIST}/"
-#       .pipe through (f,e,n) ->
-#         if match(f.path, "**/spec/**")
-#           puts f.path
-#           cmd ="./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{f.path} -R dot -t 5000"
-#           puts ""
-#           st = shell cmd
-#           st.on "error", (e) -> puts "EE:istanbul", e.stack
-#           st.write('')
-#           st.end()
-
-#         @push f
-#         n() 
-
 gulp.task "watch:spec", ->
   cache = {}
   return gulp.src GLOBS.mocha.src
     .pipe watch()
+    .pipe coffee {bare: yes}
 
     .pipe through (f,e,n) ->
+      f._file = new gutil.File f
       f.base = path.dirname f.base
       @push f
       n()
-    .pipe coffee {bare: yes}
+
     .pipe gulp.dest "./#{DIST}/"
- 
-    # .pipe through (f,e,n) ->
-    #   @push f
-    #   n()
-    
     .pipe through (f,e,n) ->
       @push f; n()
       firstTime = !cache[f.path]
@@ -109,9 +85,10 @@ gulp.task "watch:spec", ->
         else
           cache[f.path] = f.path
 
-      cmd = "export NODE_PATH=$NODE_PATH:#{process.cwd()}/dist/src"
-      # cmd = "#{cmd};./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 5000"
-      cmd ="#{cmd};./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 1000"
+      cmd = "echo"
+      # cmd = "export NODE_PATH=$NODE_PATH:#{process.cwd()}/dist/src"
+      cmd = "#{cmd};./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 5000"
+      # cmd ="#{cmd};./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 1000"
       st = exec cmd
 
       cache.stdout ?= []
@@ -132,8 +109,16 @@ gulp.task "watch:spec", ->
         cache.stdout = []
         cache.stderr = []
     
-    # .pipe through (f,e,n) ->
-    #   puts "BB", f.path 
+    .pipe through (f,e,n) ->
+
+      if match(f.path, "**/src/**")
+        @push f._file
+      
+      n()
+
+    .pipe gulp.dest "#{process.cwd()}/node_modules/super-stream"
+    # .pipe through (f,e,n)->
+    #   console.log "AAAAA", f.path
     #   @push f
     #   n()
 

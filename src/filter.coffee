@@ -7,7 +7,7 @@ once = require "lodash-node/modern/functions/once"
 {Promise} = require "es6-promise"
 
 # created fake npm package
-through = require "through"
+through = require "super-stream/through"
 
 factory = (cfg) ->
   return ->

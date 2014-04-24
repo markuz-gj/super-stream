@@ -5,7 +5,7 @@ isNull = require "lodash-node/modern/objects/isNull"
 once = require "lodash-node/modern/functions/once"
 
 # created fake npm package
-through = require "through"
+through = require "super-stream/through"
 
 factory = (cfg) ->
   return ->
