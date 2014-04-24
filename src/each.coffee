@@ -3,13 +3,14 @@
 
 isNull = require "lodash-node/modern/objects/isNull"
 once = require "lodash-node/modern/functions/once"
+defaults = require "lodash-node/modern/objects/defaults"
 
 # created fake npm package
 through = require "super-stream/through"
 
 factory = (cfg) ->
-  return ->
-    stream = through.apply through, arguments
+  return (opts, transform, flush)->
+    stream = through.call through, opts, transform, flush
     stream._each = stream._transform
 
     if arguments.length is 0 then return stream

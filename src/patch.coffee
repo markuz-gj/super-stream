@@ -3,7 +3,6 @@ domain = require "domain"
 
 isFunction = require "lodash-node/modern/objects/isFunction"
 isObject = require "lodash-node/modern/objects/isObject"
-cloneDeep = require "lodash-node/modern/objects/cloneDeep"
 
 bindDomain = (stream, dom) ->
   for i, fn of stream
