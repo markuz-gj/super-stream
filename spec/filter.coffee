@@ -12,7 +12,7 @@ chai.config.showDiff = false
 filter = require "../src/filter"
 
 # created fake npm package
-each = require "super-stream/each"
+each = require "each"
 
 describe "exported value", ->
   it 'should be a function', ->

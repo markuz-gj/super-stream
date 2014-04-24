@@ -20,18 +20,19 @@ bindDomain = (stream, dom) ->
 
   return stream
 
-patch = (stream, userDomain) ->
-  if not (stream instanceof Transform)
-     return
+factory = (cfg) ->
+  return (stream, userDomain) ->
+    if !(stream instanceof Transform) then return
 
-  if userDomain instanceof domain.Domain
-    dom = userDomain
-  else
-    dom = domain.create()
-    dom.on "error", (e) -> stream.emit "error", e
-    stream._domain = dom
+    if userDomain instanceof domain.Domain
+      dom = userDomain
+    else
+      dom = domain.create()
+      dom.on "error", (e) -> stream.emit "error", e
+      stream._domain = dom
 
-  bindDomain stream, dom
-  return stream
+    bindDomain stream, dom
+    return stream
 
-module.exports = exports = patch
+module.exports = factory()
+module.exports.factory = factory

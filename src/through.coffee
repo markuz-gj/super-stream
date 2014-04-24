@@ -6,4 +6,4 @@ isFunction = require "lodash-node/modern/objects/isFunction"
 through = through2
 through.factory = through2.ctor
 
-module.exports = exports = through
+module.exports = through

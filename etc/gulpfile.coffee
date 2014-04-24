@@ -90,10 +90,11 @@ gulp.task "watch:spec", ->
       @push f
       n()
     .pipe coffee {bare: yes}
-    .pipe through (f,e,n) ->
-      @push f
-      n()
     .pipe gulp.dest "./#{DIST}/"
+ 
+    # .pipe through (f,e,n) ->
+    #   @push f
+    #   n()
     
     .pipe through (f,e,n) ->
       @push f; n()
@@ -108,8 +109,9 @@ gulp.task "watch:spec", ->
         else
           cache[f.path] = f.path
 
-      cmd = "./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 5000"
-      # cmd ="./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 1000"
+      cmd = "export NODE_PATH=$NODE_PATH:#{process.cwd()}/dist/src"
+      # cmd = "#{cmd};./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 5000"
+      cmd ="#{cmd};./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 1000"
       st = exec cmd
 
       cache.stdout ?= []

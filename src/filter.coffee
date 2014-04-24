@@ -7,11 +7,9 @@ once = require "lodash-node/modern/functions/once"
 {Promise} = require "es6-promise"
 
 # created fake npm package
-through = require "super-stream/through"
+through = require "through"
 
-filter = {}
-filter.factory = factory = (cfg) ->
-
+factory = (cfg) ->
   return ->
     stream = through.apply through, arguments
     stream._filter = stream._transform
@@ -31,4 +29,5 @@ filter.factory = factory = (cfg) ->
 
     return stream
 
-module.exports = filter.factory()
+module.exports = factory()
+module.exports.factory = factory

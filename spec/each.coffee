@@ -35,7 +35,7 @@ describe "exported value", ->
 
     stA.write chunk
 
-describe "stream returned by #each", ->
+# describe "stream returned by #each", ->
 
   beforeEach ->
     @noop = each()
