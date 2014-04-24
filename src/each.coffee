@@ -1,8 +1,11 @@
 {Transform} = require "readable-stream"
 
-through = require "./through"
+
 isNull = require "lodash-node/modern/objects/isNull"
 once = require "lodash-node/modern/functions/once"
+
+# created fake npm package
+through = require "super-stream/through"
 
 each = {}
 each.factory = factory = (cfg) ->
@@ -21,4 +24,4 @@ each.factory = factory = (cfg) ->
 
     return stream
 
-module.exports = each.factory()
+module.exports = exports = each.factory()

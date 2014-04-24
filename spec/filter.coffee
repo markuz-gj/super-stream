@@ -10,24 +10,23 @@ expect = chai.expect
 chai.config.showDiff = false
 
 filter = require "../src/filter"
-each = require "../src/each"
+
+# created fake npm package
+each = require "super-stream/each"
 
 describe "exported value", ->
   it 'should be a function', ->
     expect(filter).to.be.an.instanceof Function
 
 describe "stream returned by #filter", ->
-
   beforeEach ->
     @noop = filter()
-    @stA = filter (f) ->
-      return yes
-
-    @stB = filter (f) ->
-      return no
+    @stA = filter (f) -> return yes
+    @stB = filter (f) -> return no
 
   it "should be an instanceof `Transform`", ->
     expect(@noop).to.be.an.instanceof Transform
+    expect(@stA).to.be.an.instanceof Transform
 
   describe "#filter() called without arguments", ->
 
@@ -39,23 +38,18 @@ describe "stream returned by #filter", ->
     it "should not have a `#_filter.next` property", ->
       expect(@noop._filter).to.not.have.property "next"
 
-
-
-  # NOTE: use some promise to test this next two specs
-
   describe "#filter() called with function arguments", ->
-
+    # NOTE: use some promise to test this next two specs
+      
     it "should let chunk pass", ->
       @stA.pipe each (f) ->
         # console.log f.toString()
-
       @stA.write "data"
 
     it "should not let chunk pass", ->
-      @stB.pipe each (f) ->
-        console.log f.toString()
-
-      @stA.write "data"
+      # @stB.pipe each (f) ->
+      #   console.log f.toString()
+      @stB.write "data"
 
 
 

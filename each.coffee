@@ -1,2 +1,2 @@
 
-module.exports = require "./src/each"
+module.exports = exports = require "./src/each"

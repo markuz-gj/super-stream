@@ -1,10 +1,13 @@
 
 {Transform} = require "readable-stream"
 
-through = require "./through"
+
 isNull = require "lodash-node/modern/objects/isNull"
 once = require "lodash-node/modern/functions/once"
 {Promise} = require "es6-promise"
+
+# created fake npm package
+through = require "super-stream/through"
 
 filter = {}
 filter.factory = factory = (cfg) ->
@@ -14,11 +17,8 @@ filter.factory = factory = (cfg) ->
     stream._filter = stream._transform
 
     if arguments.length is 0 then return stream
-    
+
     stream._flush = null
-
-    # async = new Promise (revolve, reject) ->
-
 
     stream._transform = (f,e,n) ->
       next = once n

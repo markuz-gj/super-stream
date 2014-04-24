@@ -11,11 +11,7 @@ coffee = require "gulp-coffee"
 mocha = require "gulp-mocha"
 watch = require "gulp-watch"
 through = require("through2").obj
-# shell = require "gulp-shell"
 match = require "minimatch"
-# es = require "event-stream"
-# grep = require "gulp-grep-stream"
-# filter = require "gulp-filter"
 
 {Transform} = require "stream"
 Duplexer = require "plexer"
@@ -29,11 +25,6 @@ SPEC  = "spec"
 ETC   = "etc"
 
 GLOBS =
-  # src: "./#{SRC}/"
-  # dist: "./#{DIST}/"
-  # spec: "./#{SPEC}/"
-  # etc: "./#{ETC}/"
-
 	coffee:
     src: ["#{SRC}/*.coffee", "!node_modules/**/*"]
     dest: "#{DIST}/"
@@ -94,15 +85,15 @@ gulp.task "watch:spec", ->
   return gulp.src GLOBS.mocha.src
     .pipe watch()
 
-    # .pipe through (f,e,n) ->
-    #   f.base = path.dirname f.base
-    #   @push f
-    #   n()
-    # .pipe coffee {bare: yes}
-    # .pipe through (f,e,n) ->
-    #   @push f
-    #   n()
-    # .pipe gulp.dest "./#{DIST}/"
+    .pipe through (f,e,n) ->
+      f.base = path.dirname f.base
+      @push f
+      n()
+    .pipe coffee {bare: yes}
+    .pipe through (f,e,n) ->
+      @push f
+      n()
+    .pipe gulp.dest "./#{DIST}/"
     
     .pipe through (f,e,n) ->
       @push f; n()
@@ -117,8 +108,8 @@ gulp.task "watch:spec", ->
         else
           cache[f.path] = f.path
 
-      # cmd = "./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 5000"
-      cmd ="./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 1000"
+      cmd = "./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 5000"
+      # cmd ="./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 1000"
       st = exec cmd
 
       cache.stdout ?= []
