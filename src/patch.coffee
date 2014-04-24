@@ -1,8 +1,8 @@
 domain = require "domain"
 {Transform} = require "readable-stream"
 
-{isFunction, isObject} = require "core-util-is"
-cloneDeep = require "lodash-node/modern/objects/cloneDeep"
+isFunction = require "lodash-node/modern/objects/isFunction"
+isObject = require "lodash-node/modern/objects/isObject"
 
 bindDomain = (stream, dom) ->
   for i, fn of stream
@@ -19,17 +19,19 @@ bindDomain = (stream, dom) ->
 
   return stream
 
-module.exports = (stream, userDomain) ->
-  if not (stream instanceof Transform)
-     return
+factory = (cfg) ->
+  return (stream, userDomain) ->
+    if !(stream instanceof Transform) then return
 
-  if userDomain instanceof domain.Domain
-    dom = userDomain
-  else
-    dom = domain.create()
-    dom.on "error", (e) -> stream.emit "error", e
-    
-    stream._domain = dom
+    if userDomain instanceof domain.Domain
+      dom = userDomain
+    else
+      dom = domain.create()
+      dom.on "error", (e) -> stream.emit "error", e
+      stream._domain = dom
 
-  bindDomain stream, dom
-  return stream
+    bindDomain stream, dom
+    return stream
+
+module.exports = factory()
+module.exports.factory = factory
