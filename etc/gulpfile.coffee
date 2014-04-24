@@ -1,6 +1,7 @@
 path = require "path"
 domain = require "domain"
 {exec} = require "child_process"
+{puts} = require "util"
 
 gulp = require "gulp"
 {log, colors, replaceExtension} = require "gulp-util"
@@ -55,7 +56,7 @@ rand = (n = 6) -> ~~(Math.random()*(10**n))
 ps = (str="-- #{rand 3} --") ->
   st = new Transform {objectMode: on}
   st._transform = (f,e,n) ->
-    console.log "#{str} #{f.path}"
+    puts "#{str} #{f.path}"
     @push f
     n()
 
@@ -63,8 +64,8 @@ ps = (str="-- #{rand 3} --") ->
 
 d = domain.create()
 d.on "error", (e) ->
-  console.log e.stack
-  console.log "EE:mocha", ~~(Math.random()*(10**4))
+  puts e.stack
+  puts "EE:mocha", ~~(Math.random()*(10**4))
 
 # watchStream = ->
 #   return watch (files) -> 
@@ -77,11 +78,11 @@ d.on "error", (e) ->
 #       .pipe gulp.dest "./#{DIST}/"
 #       .pipe through (f,e,n) ->
 #         if match(f.path, "**/spec/**")
-#           console.log f.path
+#           puts f.path
 #           cmd ="./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{f.path} -R dot -t 5000"
-#           console.log ""
+#           puts ""
 #           st = shell cmd
-#           st.on "error", (e) -> console.log "EE:istanbul", e.stack
+#           st.on "error", (e) -> puts "EE:istanbul", e.stack
 #           st.write('')
 #           st.end()
 
@@ -93,15 +94,15 @@ gulp.task "watch:spec", ->
   return gulp.src GLOBS.mocha.src
     .pipe watch()
 
-    .pipe through (f,e,n) ->
-      f.base = path.dirname f.base
-      @push f
-      n()
-    .pipe coffee {bare: yes, sourceMap: yes}
-    .pipe through (f,e,n) ->
-      @push f
-      n()
-    .pipe gulp.dest "./#{DIST}/"
+    # .pipe through (f,e,n) ->
+    #   f.base = path.dirname f.base
+    #   @push f
+    #   n()
+    # .pipe coffee {bare: yes}
+    # .pipe through (f,e,n) ->
+    #   @push f
+    #   n()
+    # .pipe gulp.dest "./#{DIST}/"
     
     .pipe through (f,e,n) ->
       @push f; n()
@@ -116,31 +117,30 @@ gulp.task "watch:spec", ->
         else
           cache[f.path] = f.path
 
-      cmd = "./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 5000"
-      # cmd ="./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 5000"
+      # cmd = "./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 5000"
+      cmd ="./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 1000"
       st = exec cmd
 
       cache.stdout ?= []
       cache.stderr ?= []
 
-      st.stdout.pipe through (f, e, n) ->
-        cache.stdout.push f
-        @push f
-        n()
+      st.stdout.pipe through (f, e, n) -> cache.stdout.push f; @push f; n()
 
-      st.stderr.pipe through (f, e, n) ->
-        cache.stderr.push f
-        @push f
-        n()
+      st.stderr.pipe through (f, e, n) -> cache.stderr.push f; @push f; n()
 
       st.on "close", (exitCode) ->
-        console.log cache.stdout.join ""
-        console.log cache.stderr.join ""
+
+        str = bold "#{rand 4}: #{cache[f.path]}\n"
+
+        if cache?.stdout? then str = "#{str}#{cache.stdout.join ""}"
+        if cache?.stderr? then str = "#{str}#{cache.stderr.join ""}"
+
+        puts str
         cache.stdout = []
         cache.stderr = []
     
     # .pipe through (f,e,n) ->
-    #   console.log "BB", f.path 
+    #   puts "BB", f.path 
     #   @push f
     #   n()
 
@@ -168,7 +168,7 @@ gulp.task "default", ["watch:spec", "watch:gulpfiles"]
 # gulp.task "coffee", ->
 #   job = new Transform {objectMode: yes}
 #   job._transform = (f, e, n) ->
-#     console.log f.path
+#     puts f.path
 #     @push f
 #     do n
 

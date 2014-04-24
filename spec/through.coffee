@@ -6,94 +6,55 @@ isObject = require "lodash-node/modern/objects/isObject"
 chai = require "chai"
 sinon = require "sinon"
 chai.use require "sinon-chai"
-should = chai.should()
+expect = chai.expect
+chai.config.showDiff = false
 
 through = require "../src/through"
 
 describe "exported value", ->
-  
   C = {}
 
-
   it 'should be a function', ->
-    through.should.be.an.instanceof Function
+    expect(through).to.be.an.instanceof Function
 
-  it "should have factory property", ->
-    through.should.have.property "factory"
+  it "should have `obj` property", ->
+    expect(through).to.have.property "obj"
 
-  it "should have noop property", ->
-    through.should.have.property "noop"
+  it "should have `ctor` property", ->
+    expect(through).to.have.property "ctor"
 
-# describe "method #through", ->
-#   it "should return a Transform stream"
+  it "should have `factory` property and have it equal to `ctor` property", ->
+    expect(through.factory).to.be.equal through.ctor
+    expect(through).to.have.property "factory"
 
-
-describe "noop property", ->
-  C = {}
-
-  beforeEach ->
-    C.opts = null
-
-  it 'should be a function', ->
-    through.noop.should.be.an.instanceof Function
-
-  it "should return an instanceof Transform", ->
-    through.noop().should.be.an.instanceof Transform
-
-  it "should stream data through without modifying", ->
-    chunk = new Buffer 'some data'
-    noop1 = through.noop(C.opts)
-    noop2 = through.noop(C.opts)
-
-    # console.log through
+describe "#through", ->
 
 
-    stream = through C.opts, (f,e,n) -> 
-      should.equal f, chunk
+  it "should return an instance of Transform", ->
+    expect(through()).to.be.an.instanceof Transform
 
+  it "should return a noop Transform if called without arguments", ->
+    stA = through()
+    stB = through()
 
-    noop1.pipe(noop2).pipe(stream)
-    noop1.write(chunk)
+    chunk = new Buffer "data"
 
+    stA.pipe through (f,e,n) ->
+      @push f;n()
+      expect(f).to.equal chunk
+      # console.log f.toString()
+    .pipe stB
+    .pipe through (f,e,n) ->
+      @push f;n()
 
-describe "factory property", ->
-  C = {}
+      # should.be.equal chunk
+      # should(f).be.equal chunk
+      # should.be.equal f, chunk
+      expect(f).to.equal chunk
+      # should.be.equal f, chunk
+      # console.log f.toString()
 
-  beforeEach ->
-    C.opts = {}
-
-  it 'should be a function', ->
-    through.factory.should.be.an.instanceof Function
-
-  it "should return an instanceof Function", ->
-    (through.factory()).should.be.an.instanceof Function
-
-
-  # it ""
-  # it "should return an instanceof"
-  # it "should behave as a constructor is called without the new operator", ->
-  #   through.Ctor().should.be.an.instanceof through.Ctor
-
-
-  # it "should return a #newThrough with different options as default", ->
-  #   cfg = {objectMode: on}
-  #   ss = through.factory cfg
-
-  #   noop = through.noop cfg
-  #   noop.pipe ss (f,e,n) ->
-  #     console.log f,e,n
-  #     @push f
-  #     n()
-
-  #   noop.write "LLL"
-
-
-
-
-
-
-
-
+    stA.write chunk
 
 
 
