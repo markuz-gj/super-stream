@@ -10,13 +10,14 @@ once = require "lodash-node/modern/functions/once"
 through = require "super-stream/through"
 
 factory = (cfg) ->
+  through = through.factory cfg
+  
   return ->
     stream = through.apply through, arguments
-    stream._filter = stream._transform
-
     if arguments.length is 0 then return stream
 
     stream._flush = null
+    stream._filter = stream._transform
 
     stream._transform = (f,e,n) ->
       next = once n

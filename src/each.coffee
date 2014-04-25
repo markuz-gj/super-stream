@@ -9,12 +9,13 @@ defaults = require "lodash-node/modern/objects/defaults"
 through = require "super-stream/through"
 
 factory = (cfg) ->
-  return (opts, transform, flush)->
-    stream = through.call through, opts, transform, flush
-    stream._each = stream._transform
+  through = through.factory cfg
 
+  return ->
+    stream = through.apply through, arguments
     if arguments.length is 0 then return stream
 
+    stream._each = stream._transform
     stream._transform = (f,e,n) ->
       next = once n
       stream._each.next = next

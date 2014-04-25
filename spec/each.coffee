@@ -11,7 +11,6 @@ chai.config.showDiff = false
 
 each = require "../src/each"
 
-
 describe "exported value", ->
   it 'should be a function', ->
     expect(each).to.be.an.instanceof Function
@@ -60,11 +59,11 @@ describe "exported value", ->
   it "should be an instanceof `Transform`", ->
     expect(@noop).to.be.an.instanceof Transform
 
-  it "should have a `#_each` property", ->
-    expect(@noop).to.have.property "_each"
+  # it "should have a `#_each` property", ->
+  #   expect(@noop).to.have.property "_each"
 
-  it "should not have a `#_each.next` property", ->
-    expect(@noop._each).to.not.have.property "next"
+  # it "should not have a `#_each.next` property", ->
+  #   expect(@noop._each).to.not.have.property "next"
 
   it "should call `#next()` only once even if called multiple times", ->
     ctx = @
@@ -93,6 +92,10 @@ describe "exported value", ->
       .then (spy) ->
         expect(spy).to.have.been.calledThrice
         return spy
+
+
+
+
 
   # it 
 

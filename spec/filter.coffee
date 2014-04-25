@@ -32,15 +32,24 @@ describe "stream returned by #filter", ->
 
     it "should return a noop Transform", ->
 
-    it "should have a `#_filter` property", ->
-      expect(@noop).to.have.property "_filter"
 
-    it "should not have a `#_filter.next` property", ->
-      expect(@noop._filter).to.not.have.property "next"
 
   describe "#filter() called with function arguments", ->
     # NOTE: use some promise to test this next two specs
       
+    it "should have a `#_filter` property", ->
+      expect(@stA).to.have.property "_filter"
+
+    it "should not have a `#_filter.next` property if stream hasn't been used", ->
+      expect(@stA._filter).to.not.have.property "next"
+    
+    it "should have a `#_filter.next` property if stream has been used", ->
+      ctx = @
+      @stA.pipe each ->
+        expect(ctx.stA._filter).to.have.property "next"
+
+      @stA.write "a"
+
     it "should let chunk pass", ->
       @stA.pipe each (f) ->
         # console.log f.toString()
