@@ -5,7 +5,7 @@ isFunction = require "lodash-node/modern/objects/isFunction"
 defaults = require "lodash-node/modern/objects/defaults"
 
 factory = (cfg = {}) ->
-  iterator = (opts, transform, flush) ->
+  fn = (opts, transform, flush) ->
     if isFunction opts
       flush = transform
       transform = opts
@@ -16,13 +16,12 @@ factory = (cfg = {}) ->
     if arguments.length is 0
       opts = cfg
 
-
     return through2 opts, transform, flush
 
-  iterator.factory = factory
+  fn.factory = factory
   for own k, v of through2
-    iterator[k] = v
+    fn[k] = v
 
-  return iterator
+  return fn
 
 module.exports = factory()
