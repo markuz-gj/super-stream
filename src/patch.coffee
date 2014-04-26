@@ -20,7 +20,7 @@ bindDomain = (stream, dom) ->
   return stream
 
 factory = (cfg) ->
-  return (stream, userDomain) ->
+  fn = (stream, userDomain) ->
     if !(stream instanceof Transform) then return
 
     if userDomain instanceof domain.Domain
@@ -33,5 +33,7 @@ factory = (cfg) ->
     bindDomain stream, dom
     return stream
 
+  fn.factory =factory
+  return fn
+
 module.exports = factory()
-module.exports.factory = factory

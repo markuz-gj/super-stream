@@ -14,11 +14,12 @@ each = require "../src/each"
 describe "exported value:", ->
 
   it 'should be a function', ->
+
     expect(each).to.be.an.instanceof Function
 
   it "should have `factory` property", ->
-    expect(each).to.have.property "factory"
 
+    expect(each).to.have.property "factory"
 
 beforeEachHook = Object.create null
 
@@ -43,9 +44,11 @@ for desc, runFunction of beforeEachHook
     describe "describing stream from each():", ->
 
       it "should be an instanceof `Transform`", ->
+
         expect(@each()).to.be.an.instanceof Transform
 
       it "should not have a `#_each` property", ->
+        
         expect(@each()).to.not.have.property "_each"
 
     describe "describing stream from each(function(c){}):", ->
@@ -56,15 +59,17 @@ for desc, runFunction of beforeEachHook
           if c.toString() is "skip"
             return null
           @push c
+
         @stB = @each (c,e,n) -> @push c; n(); n(); n()
 
         @chunk0 = new Buffer "data 0"
         @chunk1 = new Buffer "data 2"
         @chunk2 = new Buffer "data 1"
 
-      afterEach -> @test = @each = @noop = @chunk0 = @chunk1 = @chunk2 = undefined
+      afterEach -> @test = @noop = @chunk0 = @chunk1 = @chunk2 = undefined
 
       it "should have a `#_each` property", ->
+        
         expect(@stA).to.have.property "_each"
 
       it "should pass the right kind of data through", ->
@@ -76,14 +81,14 @@ for desc, runFunction of beforeEachHook
             expect(c.toString()).to.be.equal "L"
 
         @stA.write "L"
-        # NOTE: is the "skip" message had passed, the expect would have failed!
+        # NOTE: is the "skip" message had passed, the expect statement would have failed!
         @stA.write "skip"
 
-      it "should have a `stream#_each.next` property only after being used once", ->
+      it "should have a `stream#next` property only after being used once", ->
         ctx = @
-        expect(@stA._each).to.not.have.property "next"
+        expect(@stA).to.not.have.property "next"
         @stA.pipe @each (f) ->
-          expect(ctx.stA._each).to.have.property "next"
+          expect(ctx.stA).to.have.property "next"
 
         @stA.write "A"
 
@@ -95,54 +100,80 @@ for desc, runFunction of beforeEachHook
         @stB.write @chunk0
 
       it "should execute `#next()` automatically and work on multiple `stream#write(chunk)`", ->
-        ctx = @
+        ea = @each.factory {objectMode: yes}
+
         spy = sinon.spy()
+        s0 = ea()
+        s0.pipe ea (c) -> @next null, ++c
+          .pipe ea (c) -> @next null, ++c
+          .pipe ea (c) -> 
+            spy c
+            return
 
-        async = new Promise (resolve, reject) ->
-          ctx.noop
-            .pipe ctx.each (f) -> 
-              spy()
-              resolve(spy)
+        async = (data) ->
+          return new Promise (resolve, reject) ->
+            setTimeout ->
+              resolve(true)
+            , 10
 
-          ctx.noop.write ctx.chunk0
+            s0.write data
 
-        async.then (spy) -> 
-            ctx.noop.write ctx.chunk1
-            return spy 
-          .then (spy) -> 
-            ctx.noop.write ctx.chunk2
-            return spy 
-          .then (spy) ->
-            expect(spy).to.have.been.calledThrice
-            return spy
+        async(-1).then ->
+            expect(spy).to.be.calledWith 1
+            async 1
+          .then ->
+            expect(spy).to.be.calledWith 3
+            expect(spy).to.not.be.calledWith 5
+            async 3
+          .then ->
+            expect(spy).to.be.calledWith 5
 
+      it "should call each transform with three arguments only", ->
+        @stA.pipe @each ->
+          expect(arguments.length).to.be.equal 3
+          return
+        @stA.write 'data'
 
+      it "should stream `-1` and have it be incremented twice", ->
+        ea = @each.factory {objectMode: yes}
 
+        s0 = ea()
+        s0.pipe ea (c) ->
+            @push ++c
+          .pipe ea (c) ->
+            @push ++c
+          .pipe ea (c) ->
+            expect(c).to.be.equal 1
 
+        s0.write -1
 
+      it "should pass data down stream multiple times always", ->
+        ea = @each.factory {objectMode: yes}
 
+        spy = sinon.spy()
+        s0 = ea()
+        s0.pipe ea (c) -> @push ++c
+          .pipe ea (c) -> @push ++c
+          .pipe ea (c) -> 
+            spy c
 
+        async = (data) ->
+          return new Promise (resolve, reject) ->
+            setTimeout ->
+              resolve(true)
+            , 10
 
+            s0.write data
 
+        async(-1).then ->
+            expect(spy).to.be.calledWith 1
+            async 1
+          .then ->
+            expect(spy).to.be.calledWith 3
+            expect(spy).to.not.be.calledWith 5
+            async 3
+          .then ->
+            expect(spy).to.be.calledWith 5
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
 

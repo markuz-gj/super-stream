@@ -64,7 +64,7 @@ gulp.task "watch:spec", ->
   return gulp.src GLOBS.mocha.src
     .pipe watch()
 
-    .pipe coffee {bare: yes}
+    # .pipe coffee {bare: yes}
 
     .pipe through (f,e,n) ->
       f._file = new gutil.File f
@@ -72,7 +72,7 @@ gulp.task "watch:spec", ->
       @push f
       n()
 
-    .pipe gulp.dest "./#{DIST}/"
+    # .pipe gulp.dest "./#{DIST}/"
 
     .pipe through (f,e,n) ->
       @push f; n()
@@ -89,8 +89,8 @@ gulp.task "watch:spec", ->
 
       cmd = "echo"
       # cmd = "export NODE_PATH=$NODE_PATH:#{process.cwd()}/dist/src"
-      cmd = "#{cmd};./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 1000"
-      # cmd ="#{cmd};./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 1000"
+      # cmd = "#{cmd};./node_modules/istanbul/lib/cli.js cover --report html ./node_modules/mocha/bin/_mocha -- #{cache[f.path]} -R spec -t 1000"
+      cmd ="#{cmd};./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register #{cache[f.path]} -R spec -t 1000"
       st = exec cmd
 
       cache.stdout ?= []

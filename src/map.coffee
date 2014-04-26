@@ -1,7 +1,6 @@
+
 {Transform} = require "readable-stream"
 
-
-isNull = require "lodash-node/modern/objects/isNull"
 once = require "lodash-node/modern/functions/once"
 
 # created fake npm package
@@ -10,16 +9,20 @@ isNoop = require "super-stream/isNoop"
 
 factory = (cfg) ->
   th2 = through.factory cfg
-
+  
   fn = ->
     stream = th2.apply th2, arguments
     if isNoop(arguments) then return stream
 
-    stream._each = stream._transform
-    stream._transform = (chunk,e,n) ->
+    stream._flush = null
+    stream._map = stream._transform
+
+    stream._transform = (f,e,n) ->
       next = once n
-      stream.next = next
-      if !isNull stream._each(chunk, e, next) then return next()
+      stream._flush = null
+      stream._map.next = next
+      ret = stream._map.call(Object.create(null), f, e)
+      next(null, ret)
 
     return stream
 
@@ -27,5 +30,3 @@ factory = (cfg) ->
   return fn
 
 module.exports = factory()
-
-

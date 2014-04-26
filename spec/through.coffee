@@ -15,15 +15,19 @@ through = require "../src/through"
 describe "exported value:", ->
 
   it 'should be a function', ->
+    
     expect(through).to.be.an.instanceof Function
 
   it "should have `obj` property", ->
+    
     expect(through).to.have.property "obj"
 
   it "should have `ctor` property", ->
+    
     expect(through).to.have.property "ctor"
 
   it "should have `factory` property", ->
+    
     expect(through).to.have.property "factory"
 
 
@@ -32,11 +36,13 @@ beforeEachHookA = Object.create null
 beforeEachHookA["describing returned function from through.factory():\n"] = ->
   @th = through.factory()
   @stA = @th()
+  @stX = @th {objectMode: on}
   @objMode = no
 
 beforeEachHookA["describing returned function from through.factory({objectMode: true}):\n"] = ->
   @th = through.factory {objectMode: true}
   @stA = @th()
+  @stX = @th {objectMode: off}
   @objMode = yes
 
 for descA, runFunctionA of beforeEachHookA
@@ -110,31 +116,47 @@ for descA, runFunctionA of beforeEachHookA
             expect(ctx.spyA).to.be.calledWith data
             expect(ctx.spyB).to.be.calledWith data
 
-        it "should use the same 'pipeline' twice", ->
-          ctx = @
-          streamAsync = (data) ->
+        it "should use the same 'pipeline' multiple times", ->
+          th = through.factory {objectMode: yes}
+
+          spy = sinon.spy()
+          s0 = th()
+          s0.pipe th (c,e,n) -> n null, ++c
+            .pipe th (c,e,n) -> n null, ++c
+            .pipe th (c,e,n) -> 
+              spy c
+              n()
+
+          async = (data) ->
             return new Promise (resolve, reject) ->
-            
-              ctx.stA.pipe ctx.stB
-                .pipe ctx.th (c,e,n) ->
-                  ctx.spyA c
-                  @push c; n()
+              setTimeout ->
+                resolve(true)
+              , 10
 
-                .pipe ctx.th (c,e,n) ->
-                  ctx.spyB c
-                  @push c; n()
+              s0.write data
 
-                .pipe ctx.th (c,e,n) ->
-                  resolve c
-
-              ctx.stA.write data
-
-          streamAsync(ctx.dataA).then ->
-              expect(ctx.spyA).to.be.calledWith ctx.dataA
-              expect(ctx.spyB).to.be.calledWith ctx.dataA
-              streamAsync ctx.dataB
+          async(-1).then ->
+              expect(spy).to.be.calledWith 1
+              async 1
             .then ->
-              expect(ctx.spyA).to.be.calledWith ctx.dataB
-              expect(ctx.spyB).to.be.calledWith ctx.dataB
+              expect(spy).to.be.calledWith 3
+              expect(spy).to.not.be.calledWith 5
+              async 3
+            .then ->
+              expect(spy).to.be.calledWith 5
+
+        it "should pass different options to `through` and have it reflect on the new stream only", ->
+          data = "data"
+          if @objMode
+            # @stX was defined with {objectMode: false}
+            @stX.pipe @th {objectMode: off}, (c) ->
+              expect(c.toString()).to.be.equal data.toString()
+              expect(c).to.not.be.equal data
+          else
+            # @stX was defined with {objectMode: true}
+            @stX.pipe @th {objectMode: on}, (c) ->
+              expect(c).to.be.equal data
+
+          @stX.write data
 
 
