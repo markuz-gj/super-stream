@@ -39,8 +39,6 @@ beforeEachHookA["describing returned function from through.factory({objectMode: 
   @stA = @th()
   @objMode = yes
 
-
-
 for descA, runFunctionA of beforeEachHookA
   describe descA, ->
     beforeEach runFunctionA
@@ -69,6 +67,8 @@ for descA, runFunctionA of beforeEachHookA
       @stB = @th()
       @spyA = sinon.spy()
       @spyB = sinon.spy()
+      @dataA = new Buffer "A"
+      @dataB = new Buffer "B"
 
     beforeEachHookB["describing stream from through(function(c,e,n){}, function(c,e,n){}):"] =  ->
       noop = (c,e,n) ->
@@ -77,11 +77,15 @@ for descA, runFunctionA of beforeEachHookA
       @stB = @th(noop, noop)
       @spyA = sinon.spy()
       @spyB = sinon.spy()
+      @dataA = new Buffer "A"
+      @dataB = new Buffer "B"
 
-    for own descB, runFunctionB of beforeEachHookB
+    for descB, runFunctionB of beforeEachHookB
       describe descB, ->
 
         beforeEach runFunctionB
+
+        afterEach -> @dataB = @dataA = @stB = @spyA = @spyB = undefined
 
         it "should pipe `through streams` to each other and pass data through them", ->
           ctx = @
@@ -125,12 +129,12 @@ for descA, runFunctionA of beforeEachHookA
 
               ctx.stA.write data
 
-       
-          for i, buf of [new Buffer("A"), new Buffer("B")]
-
-            do (buf) ->
-              streamAsync(buf).then (chunk) ->
-                expect(ctx.spyA).to.be.calledWith buff
-                expect(ctx.spyB).to.be.calledWith buff
+          streamAsync(ctx.dataA).then ->
+              expect(ctx.spyA).to.be.calledWith ctx.dataA
+              expect(ctx.spyB).to.be.calledWith ctx.dataA
+              streamAsync ctx.dataB
+            .then ->
+              expect(ctx.spyA).to.be.calledWith ctx.dataB
+              expect(ctx.spyB).to.be.calledWith ctx.dataB
 
 

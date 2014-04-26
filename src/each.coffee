@@ -18,7 +18,7 @@ factory = (cfg) ->
     stream._each = stream._transform
     stream._transform = (f,e,n) ->
       next = once n
-      stream?._each?.next = next
+      stream._each.next = next
       if !isNull stream._each(f, e, next)
         next()
 

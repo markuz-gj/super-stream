@@ -19,7 +19,7 @@ factory = (cfg = {}) ->
     return through2 opts, transform, flush
 
   fn.factory = factory
-  for own k, v of through2
+  for k, v of through2
     fn[k] = v
 
   return fn

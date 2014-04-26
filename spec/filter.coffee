@@ -28,11 +28,13 @@ beforeEachHook["describing returned function from filter.factory():\n"] =  ->
   @filter = filter.factory()
   @objMode = no
   @data = new Buffer "data"
+  @data2 = new Buffer "data2"
 
 beforeEachHook["describing returned function from filter.factory({objectMode: true}):\n"] =  ->
   @filter = filter.factory {objectMode: true}
   @objMode = yes
   @data = "data"
+  @data2 = "data2"
 
 for desc, runFunction of beforeEachHook
 
@@ -53,14 +55,17 @@ for desc, runFunction of beforeEachHook
     describe "describing stream from filter(function(c){}):", ->
 
       beforeEach ->
+        ctx = @
         @noop = @filter()
         # thruthy streams
         @stA = @filter (c) -> return !!c
         @stB = @filter (c) -> return c
         
         # falsy streams
-        @stC = @filter (c) -> return !c 
-        @stD = @filter ->
+        @stC = @filter (c) -> 
+          if c.toString() is ctx.data2.toString()
+            return c
+          return !c 
 
         @spyA = sinon.spy()
         @spyB = sinon.spy()
@@ -111,27 +116,21 @@ for desc, runFunction of beforeEachHook
       it "should not let data pass if returned falsy", ->
         ctx = @
   
-        asyncC = new Promise (resolve, reject) ->
-          setTimeout -> 
-            resolve()
-          , 20
+        async = (data) ->
+          return new Promise (resolve, reject) ->
+            setTimeout -> 
+              resolve()
+            , 20
 
-          ctx.stC.pipe ctx.filter (c) -> ctx.spyC c
-          ctx.stC.write ctx.data
+            ctx.stC.pipe ctx.filter (c) ->
+              ctx.spyC c.toString()
+            ctx.stC.write data
 
-        asyncD = new Promise (resolve, reject) ->
-          setTimeout -> 
-            resolve()
-          , 20
-
-          ctx.stD.pipe ctx.filter (c) -> ctx.spyD c
-          ctx.stD.write ctx.data
-
-        asyncC.then (spy) ->
-          expect(ctx.spyC).to.not.been.calledWith ctx.data
+        async(ctx.data).then ->
+            expect(ctx.spyC).to.not.been.calledWith ctx.data.toString()
         
-        asyncD.then (spy) ->
-          expect(ctx.spyD).to.not.been.calledWith ctx.data
+        async(ctx.data2).then ->
+            expect(ctx.spyC).to.been.calledWith ctx.data2.toString()
 
 
 # describe "exported value:", ->

@@ -52,7 +52,10 @@ for desc, runFunction of beforeEachHook
 
       beforeEach ->
         @noop = @each()
-        @stA = @each (c) -> @push c
+        @stA = @each (c) -> 
+          if c.toString() is "skip"
+            return null
+          @push c
         @stB = @each (c,e,n) -> @push c; n(); n(); n()
 
         @chunk0 = new Buffer "data 0"
@@ -73,6 +76,8 @@ for desc, runFunction of beforeEachHook
             expect(c.toString()).to.be.equal "L"
 
         @stA.write "L"
+        # NOTE: is the "skip" message had passed, the expect would have failed!
+        @stA.write "skip"
 
       it "should have a `stream#_each.next` property only after being used once", ->
         ctx = @
