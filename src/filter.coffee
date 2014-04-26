@@ -4,27 +4,26 @@
 
 isNull = require "lodash-node/modern/objects/isNull"
 once = require "lodash-node/modern/functions/once"
-{Promise} = require "es6-promise"
 
 # created fake npm package
 through = require "super-stream/through"
 
 factory = (cfg) ->
+  th2 = through.factory cfg
+  
   return ->
-    stream = through.apply through, arguments
-    stream._filter = stream._transform
-
+    stream = th2.apply th2, arguments
     if arguments.length is 0 then return stream
 
     stream._flush = null
+    stream._filter = stream._transform
 
     stream._transform = (f,e,n) ->
       next = once n
+      stream._flush = null
       stream._filter.next = next
 
-      retValue = stream._filter.call(Object.create(null), f, e)
-
-      if !!retValue then @push f
+      if !!stream._filter.call(null, f, e) then @push f
       next()
 
     return stream

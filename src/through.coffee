@@ -2,7 +2,26 @@
 
 through2 = require "through2"
 isFunction = require "lodash-node/modern/objects/isFunction"
-through = through2
-through.factory = through2.ctor
+defaults = require "lodash-node/modern/objects/defaults"
 
-module.exports = exports = through
+factory = (cfg = {}) ->
+  fn = (opts, transform, flush) ->
+    if isFunction opts
+      flush = transform
+      transform = opts
+      opts = cfg
+    else
+      opts = defaults opts, cfg
+
+    if arguments.length is 0
+      opts = cfg
+
+    return through2 opts, transform, flush
+
+  fn.factory = factory
+  for own k, v of through2
+    fn[k] = v
+
+  return fn
+
+module.exports = factory()

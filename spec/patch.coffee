@@ -43,7 +43,7 @@ describe "exported value", ->
     expect(patch).to.be.an.instanceof Function
 
 
-for desc, runFunction of descObj
+for own desc, runFunction of descObj
   describe desc, ->
 
 
