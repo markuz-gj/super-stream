@@ -109,8 +109,8 @@ for descA, runFunctionA of beforeEachHookA
             ctx.stA.write data
 
           async.then (chunk) ->
-            expect(ctx.spyA).to.be.calledWith data
-            expect(ctx.spyB).to.be.calledWith data
+            expect(ctx.spyA).to.have.been.calledWith data
+            expect(ctx.spyB).to.have.been.calledWith data
 
         it "should use the same 'pipeline' multiple times", ->
           th = through.factory {objectMode: yes}
@@ -129,14 +129,14 @@ for descA, runFunctionA of beforeEachHookA
               s0.write data
 
           async(-1).then ->
-            expect(spy).to.be.calledWith 1
+            expect(spy).to.have.been.calledWith 1
             return async 1
           .then ->
-            expect(spy).to.be.calledWith 3
-            expect(spy).to.not.be.calledWith 5
+            expect(spy).to.have.been.calledWith 3
+            expect(spy).to.not.have.been.calledWith 5
             return async 3
           .then ->
-            expect(spy).to.be.calledWith 5
+            expect(spy).to.have.been.calledWith 5
 
         it "should pass different options to through and have it reflect on the new stream only", ->
           data = "data"

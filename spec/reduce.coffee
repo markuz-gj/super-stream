@@ -109,7 +109,7 @@ for desc, runFunction of beforeEachHook
             s0.write data
 
         async(-1).then (value) ->
-          expect(spy).to.be.calledWith 1
+          expect(spy).to.have.been.calledWith 1
 
       it "should selectively pass data down stream", ->
         ctx = @
@@ -123,7 +123,7 @@ for desc, runFunction of beforeEachHook
             ctx.stB.write data
 
         async(@data).then ->
-          expect(spy).to.not.been.calledWith ctx.data.toString()
+          expect(spy).to.not.have.been.calledWith ctx.data.toString()
           return async(ctx.data2)
         .then ->
           expect(spy).to.been.calledWith ctx.data2.toString()
@@ -143,14 +143,14 @@ for desc, runFunction of beforeEachHook
             s0.write data
 
         async(-1).then ->
-          expect(spy).to.be.calledWith 1
+          expect(spy).to.have.been.calledWith 1
           return async 1
         .then ->
-          expect(spy).to.be.calledWith 3
+          expect(spy).to.have.been.calledWith 3
           expect(spy).to.not.be.calledWith 5
           return async 3
         .then ->
-          expect(spy).to.be.calledWith 5
+          expect(spy).to.have.been.calledWith 5
 
       it "should keep data at the reduce's context", ->
         r = @reduce.factory {objectMode: yes}
@@ -180,40 +180,40 @@ for desc, runFunction of beforeEachHook
         .then ->
           return async 3
         .then ->
-          expect(spy).to.be.calledWith 9
+          expect(spy).to.have.been.calledWith 9
 
       it "should clean the reduce's context once flush is called", ->
         r = @reduce.factory {objectMode: yes}
 
         spy = sinon.spy()
         s0 = r()
-        s0.pipe r (c) -> @flush ++c
-          .pipe r (c) -> 
-            ++c
-            @stack ?= []
-            @stack.push c 
-            if c > 3 
-              ans = 0
-              ans += i for i in @stack
-              @flush ans
+        s1 = r (c) ->
+          c += 1
+          @stack ?= []
+          @stack.push c 
+          if c > 3 
+            ans = 0
+            ans += i for i in @stack
+            @flush ans
 
+        s0.pipe r (c) -> c += 1; @flush c
+          .pipe s1
           .pipe r (c) -> spy c
 
         asyncA = (data) ->
           return new Promise (resolve, reject) ->
             setTimeout resolve, 1
+
             s0.write data
 
         asyncB = ->
-          return asyncA(-1).then ->
-              return asyncA 1
-            .then ->
-              return asyncA 3
-            .then ->
-              expect(spy).to.be.calledWith 9
-              expect(spy).to.not.be.calledWith 18
+          asyncA(-1)
+            .then -> asyncA 1
+            .then -> asyncA 3
 
-
-        asyncB().then -> asyncB()
+        asyncB()
+          .then -> asyncB()
+          .then -> 
+            expect(spy).to.always.have.been.calledWithExactly 9 
 
 

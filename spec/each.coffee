@@ -122,14 +122,14 @@ for desc, runFunction of beforeEachHook
             s0.write data
 
         async(-1).then ->
-          expect(spy).to.be.calledWith 1
+          expect(spy).to.have.been.calledWith 1
           async 1
         .then ->
-          expect(spy).to.be.calledWith 3
-          expect(spy).to.not.be.calledWith 5
+          expect(spy).to.have.been.calledWith 3
+          expect(spy).to.not.have.been.calledWith 5
           async 3
         .then ->
-          expect(spy).to.be.calledWith 5
+          expect(spy).to.have.been.calledWith 5
 
   
 
