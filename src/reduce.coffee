@@ -11,17 +11,27 @@ factory = (cfg) ->
   th2 = through.factory cfg
   
   fn = ->
+    scope = {}
+    scope.stream = Object.create(null)
     stream = th2.apply th2, arguments
+
     if isNoop(arguments) then return stream
 
-    stream._map = stream._transform
-    stream._transform = (f,e,n) ->
+    stream._reduce = stream._transform
+
+
+    stream._transform = (chunk,e,n) ->
       next = once n
       stream._flush = null
       stream._transform.next = next
+      push = @push
+      scope.stream.flush = (data) ->
+        scope.stream = Object.create null
+        next null, data
 
-      next null, stream._map.call(Object.create(null), f, e)
-
+      stream._reduce.call(scope.stream, chunk, e)
+      next()
+      
     return stream
 
   fn.factory = factory

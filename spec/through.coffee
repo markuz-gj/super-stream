@@ -15,19 +15,15 @@ through = require "../src/through"
 describe "exported value:", ->
 
   it 'should be a function', ->
-    
     expect(through).to.be.an.instanceof Function
 
-  it "should have `obj` property", ->
-    
+  it "should have obj property", ->
     expect(through).to.have.property "obj"
 
-  it "should have `ctor` property", ->
-    
+  it "should have ctor property", ->
     expect(through).to.have.property "ctor"
 
-  it "should have `factory` property", ->
-    
+  it "should have factory property", ->
     expect(through).to.have.property "factory"
 
 
@@ -93,7 +89,7 @@ for descA, runFunctionA of beforeEachHookA
 
         afterEach -> @dataB = @dataA = @stB = @spyA = @spyB = undefined
 
-        it "should pipe `through streams` to each other and pass data through them", ->
+        it "should pipe through streams to each other and pass data through them", ->
           ctx = @
           data = new Buffer("a")
           async = new Promise (resolve, reject) ->
@@ -129,23 +125,20 @@ for descA, runFunctionA of beforeEachHookA
 
           async = (data) ->
             return new Promise (resolve, reject) ->
-              setTimeout ->
-                resolve(true)
-              , 10
-
+              setTimeout resolve, 1
               s0.write data
 
           async(-1).then ->
-              expect(spy).to.be.calledWith 1
-              async 1
-            .then ->
-              expect(spy).to.be.calledWith 3
-              expect(spy).to.not.be.calledWith 5
-              async 3
-            .then ->
-              expect(spy).to.be.calledWith 5
+            expect(spy).to.be.calledWith 1
+            return async 1
+          .then ->
+            expect(spy).to.be.calledWith 3
+            expect(spy).to.not.be.calledWith 5
+            return async 3
+          .then ->
+            expect(spy).to.be.calledWith 5
 
-        it "should pass different options to `through` and have it reflect on the new stream only", ->
+        it "should pass different options to through and have it reflect on the new stream only", ->
           data = "data"
           if @objMode
             # @stX was defined with {objectMode: false}

@@ -14,16 +14,14 @@ factory = (cfg) ->
     stream = th2.apply th2, arguments
     if isNoop(arguments) then return stream
 
-    stream._flush = null
     stream._filter = stream._transform
-
-    stream._transform = (c,e,n) ->
+    stream._transform = (chunk,e,n) ->
       next = once n
       stream._flush = null
-      stream._filter.next = next
+      stream._transform.next = next
 
-      if !!stream._filter.call(Object.create(null), c, e) 
-        return next(null, c)
+      if !!stream._filter.call(Object.create(null), chunk, e) 
+        return next null, chunk
       
       return next()
 

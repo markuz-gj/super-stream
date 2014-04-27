@@ -1,6 +1,5 @@
 {Transform} = require "readable-stream"
 
-
 isNull = require "lodash-node/modern/objects/isNull"
 once = require "lodash-node/modern/functions/once"
 
@@ -16,10 +15,13 @@ factory = (cfg) ->
     if isNoop(arguments) then return stream
 
     stream._each = stream._transform
+    stream._ = Object.create null
+
     stream._transform = (chunk,e,n) ->
       next = once n
       stream.next = next
-      if !isNull stream._each(chunk, e, next) then return next()
+      if not isNull stream._each(chunk, e, next)
+        return next()
 
     return stream
 

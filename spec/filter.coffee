@@ -20,7 +20,7 @@ describe "exported value:", ->
     
     expect(filter).to.be.an.instanceof Function
 
-  it "should have `factory` property", ->
+  it "should have factory property", ->
     
     expect(filter).to.have.property "factory"
 
@@ -48,12 +48,10 @@ for desc, runFunction of beforeEachHook
 
     describe "describing stream from filter():", ->
 
-      it "should be an instanceof `Transform`", ->
-
+      it "should be an instanceof Transform", ->
         expect(@filter()).to.be.an.instanceof Transform
 
-      it "should not have a `#_filter` property", ->
-        
+      it "should not have a #_filter property", ->
         expect(@filter()).to.not.have.property "_filter"
 
     describe "describing stream from filter(function(c){}):", ->
@@ -82,17 +80,17 @@ for desc, runFunction of beforeEachHook
 
       afterEach -> @filter = @noop = @chunk0 = @chunk1 = @chunk2 = undefined
 
-      it "should have a `#_filter` property", ->
+      it "should have a #_filter property", ->
 
         expect(@stA).to.have.property "_filter"
 
-      it "should not have a `#_filter.next` property if stream hasn't been used", ->
+      it "should not have a #_transform.next property if stream hasn't been used", ->
 
-        expect(@stA._filter).to.not.have.property "next"
+        expect(@stA._transform).to.not.have.property "next"
 
-      it "should have a `#_filter.next` property if stream has been used", ->
+      it "should have a #_transform.next property if stream has been used", ->
         @stA.write "data"
-        expect(@stA._filter).to.have.property "next"
+        expect(@stA._transform).to.have.property "next"
 
       it "should have the map function context set to Object.create(null)", ->
         ctx = @
@@ -109,16 +107,13 @@ for desc, runFunction of beforeEachHook
 
         async = (data) ->
           return new Promise (resolve, reject) ->
-            setTimeout -> 
-              resolve()
-            , 20
-
+            setTimeout resolve, 1
             ctx.stB.write data
  
         async(@data).then (spy) ->
           expect(ctx.spyB).to.been.calledWith ctx.data
-
-        async(@data2).then (spy) ->
+          return async(ctx.data2)
+        .then (spy) ->
           expect(ctx.spyB).to.been.calledWith ctx.data2
         
       it "should not let data pass if returned falsy", ->
@@ -128,19 +123,16 @@ for desc, runFunction of beforeEachHook
 
         async = (data) ->
           return new Promise (resolve, reject) ->
-            setTimeout -> 
-              resolve()
-            , 20
-
+            setTimeout resolve, 1
             ctx.stC.write data
 
         async(ctx.data).then ->
           expect(ctx.spyC).to.not.been.calledWith ctx.data.toString()
-        
-        async(ctx.data2).then ->
+          return async ctx.data2
+        .then ->
           expect(ctx.spyC).to.been.calledWith ctx.data2.toString()
 
-      it "should call `filter` transform with two arguments only", ->
+      it "should call filter transform with two arguments only", ->
         @stA.pipe @filter ->
           expect(arguments.length).to.be.equal 2
           return
