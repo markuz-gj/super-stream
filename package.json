@@ -20,6 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "coffee-script": "^1.7.1",
+    "inherits": "^2.0.1",
     "plexer": "0.0.2",
     "readable-stream": "^1.0.27-1",
     "through2": "^0.4.1"

@@ -20,7 +20,7 @@ describe "exported value:", ->
     expect(isNoop).to.be.an.instanceof Function
 
   it "should return true if the argumenets make a noop stream", ->
-    expect(isNoop()).to.be.true
+    expect(isNoop([])).to.be.true
 
   it "should return false for a regular stream", ->
     expect(isNoop([{}, new Function()])).to.be.false
