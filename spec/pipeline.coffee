@@ -11,7 +11,6 @@ chai.config.showDiff = false
 
 pipeline = require "../src/pipeline"
 
-pl = pipeline.pipeline
 # created fake npm package
 each = require "super-stream/each"
 
@@ -56,7 +55,62 @@ for desc, runFunction of beforeEachHook
 
     describe "describing pipeline from pipeline():", ->
       it "must be an instanceof Pipeline", ->
-        @pln()
+
+
+
+        pl = pipeline()
+
+        stA = each (c) -> 
+          console.log 'a', c.toString()
+          @push c
+
+        stB = each (c) ->
+          console.log 'b', c.toString()
+          @push c
+
+        # stA.pipe pl
+        #   .pipe stB
+
+        # stA.write "A"
+
+        pl2 = pipeline [stA, pl, stB]
+
+        stC = each (c) ->
+          console.log 'c', c.toString()
+          @push c
+
+        stD = each (c) ->
+          console.log "d", c.toString()
+          @push c
+
+
+        stE = each (c) ->
+          console.log "e", c.toString()
+          @push c
+
+        stF = each (c) ->
+          console.log "f", c.toString()
+          @push c
+
+        pl3 = pipeline [stC, pl2, stD]
+
+
+        stE.pipe pl3
+          .pipe stF
+
+        stE.write "p"
+        # stC.pipe pl2
+        #   .pipe stD
+
+        # stC.write 'p'
+
+
+
+
+
+        # for k,i of pl
+        #   console.log k
+        # @pln()
       #   expect(@pln()).to.be.an.instanceof @pln.Pipeline
 
 

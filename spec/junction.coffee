@@ -15,7 +15,7 @@ each = require "super-stream/each"
 through = require "super-stream/through"
 
     # all possible junctions
-    # Transform only junctions being tested now.
+    # Transform only junctions have being tested so far.
 
     # @jntA01 = @jnt @readableStream
     # @jntA02 = @jnt @writableStream
