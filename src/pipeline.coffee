@@ -10,7 +10,7 @@ defaults = require "lodash-node/modern/objects/defaults"
 
 inherits = require "inherits"
 
-{isReadable, isTransform, isStream, isWritable} = require "./isStream"
+{isReadable, isTransform, isStream, isWritable, isJunction} = require "./isStream"
 
 # created fake npm package
 through = require "super-stream/through"
@@ -19,16 +19,13 @@ through = require "super-stream/through"
 factory = (cfg = {}) ->
   th2 = through.factory cfg
 
-  Pipeline = (opts, jnt, streams) ->
-    if not @ instanceof Pipeline
-      return new Pipeline opts
-
+  fn = (opts, jnt, streams) -> 
     if isArray opts
       streams = opts
       opts = cfg
       jnt = new Junction opts
 
-    else if opts instanceof Junction
+    else if isJunction opts
       if isArray jnt
         streams = jnt
       else
@@ -39,41 +36,16 @@ factory = (cfg = {}) ->
     else if !opts
       opts = cfg
 
-    if not jnt instanceof Junction
+    if !isJunction jnt
       jnt = new Junction opts
 
     if !isArray streams
       streams = [through opts]
 
-    Junction.call @, opts
-
-    @_sections = streams
-
-    for st, i in @_sections
-      do (st, i) =>
-        stA = st
-
-        stA.on "error", (err) -> jnt.emit "error", err
-
-        if i is 0
-          @_writable.pipe stA
-
-        if i is @_sections.length - 1
-          return stA.pipe @_readable
-
-        stB = @_sections[i + 1]
-        stA.pipe stB
-
-    return @
-
-  inherits Pipeline, Junction
-
-  fn = (opts, streams) ->
-    jnt = junction 
     jnt._sections = streams
 
     for st, i in jnt._sections
-      do (st, i) ->
+      do (st, i) =>
         stA = st
 
         stA.on "error", (err) -> jnt.emit "error", err
@@ -89,9 +61,7 @@ factory = (cfg = {}) ->
 
     return jnt
 
-  fn = (opts, jnt, streams) -> return new Pipeline opts, jnt, streams
   fn.factory = factory
-  fn.Pipeline = Pipeline
 
   return fn
 

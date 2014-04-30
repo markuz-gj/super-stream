@@ -51,8 +51,8 @@ factory = (cfg = {}) ->
     Plexer.call @, opts, entry, exit
 
     ctx = @
-    @_writable._transform = -> return ctx._entry.apply ctx, arguments
-    @_readable._transform = -> return ctx._exit.apply ctx, arguments
+    @_writable._transform = -> return ctx._entry.apply @, arguments
+    @_readable._transform = -> return ctx._exit.apply @, arguments
 
     return @
 

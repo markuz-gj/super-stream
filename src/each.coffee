@@ -19,8 +19,8 @@ factory = (cfg) ->
 
     stream._transform = (chunk,e,n) ->
       next = once n
-      stream.next = next
-      if not isNull stream._each(chunk, e, next)
+      @next = next
+      if not isNull @_each(chunk, e, next)
         return next()
 
     return stream

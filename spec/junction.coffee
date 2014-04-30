@@ -47,21 +47,6 @@ through = require "super-stream/through"
     # @jntB18 = @jnt null, @writableStream, @transformStream
     # @jntB19 = @jnt null, @transformStream, @writableStream
 
-describe "exported value:", ->
-
-  it 'must be a function', -> 
-    expect(junction).to.be.an.instanceof Function
-
-  it "must have #factory be an instanceof Function", ->
-    expect(junction).to.have.property "factory"
-    expect(junction.factory).to.be.an.instanceof Function
-
-  it "must have #Junction be an instanceof Function", ->
-    expect(junction).to.have.property "Junction"
-    expect(junction.Junction).to.be.an.instanceof Function
-
-hooks = Object.create null
-
 addToTestContext = ->
   ctx = @
   @ea = each.factory @opts
@@ -92,25 +77,87 @@ addToTestContext = ->
     @jntB20
   ]
 
-hooks["junctions from `var jnt = junction.factory();`\n"] =  {
+hooks = Object.create null
+
+hooks["junctions from `var jnt = junction.factory();`\n"] =
   before: ->
     @opts = {}
-    @data = new Buffer "data"
     addToTestContext.call @
+    @data1 = new Buffer "data1"
+    @data2 = new Buffer "data2"
+    @data3 = new Buffer "data3"
+    @data4 = new Buffer "data4"
 
   after: ->
 
-}
-
-hooks["junctions from `var jnt = junction.factory({objectMode: true});`\n"] =  {
+hooks["junctions from `var jnt = junction.factory({objectMode: true});`\n"] =
   before: ->
-    @opts = {objectMode: yes}
-    @data = "data"
     addToTestContext.call @
+    @opts = {objectMode: yes}
+    @data1 = "data1"
+    @data2 = "data2"
+    @data3 = "data3"
+    @data4 = "data4"
 
   after: ->
 
-}
+async = (data, stream) ->
+  new Promise (res, rej) ->
+    stream.write data
+    setImmediate res
+
+spies =
+  free: []
+  used: []
+
+spy = (stream) ->
+  if spies.free.length is 0
+    agent = sinon.spy()
+  else
+    agent = spies.free.pop()
+    agent.reset()
+
+  spies.used.push agent
+  iterator = stream._transform
+  stream._spy = agent
+
+  stream._transform = (c) ->
+    agent c
+    iterator.apply @, arguments
+
+  return agent
+
+addToTestContext2 = ->
+  @stA = @ea (c) -> @push c
+  @stB = @ea (c) -> @push c
+  @stX = @ea (c) -> @push c
+  @stZ = @ea (c) -> @push c
+
+  @spyA = spy @stA
+  @spyB = spy @stB
+  @spyX = spy @stX
+  @spyZ = spy @stZ
+  @tests = []
+
+  @promise = (fn) =>
+    @tests.push async(@data1, @stX).then fn
+
+  @resolve = (done) =>
+    Promise.all(@tests).then -> done()
+      .catch done
+
+describe "exported value:", ->
+
+  it 'must be a function', -> 
+    expect(junction).to.be.an.instanceof Function
+
+  it "must have #factory be an instanceof Function", ->
+    expect(junction).to.have.property "factory"
+    expect(junction.factory).to.be.an.instanceof Function
+
+  it "must have #Junction be an instanceof Function", ->
+    expect(junction).to.have.property "Junction"
+    expect(junction.Junction).to.be.an.instanceof Function
 
 for desc, run of hooks
   do (desc, run) ->
@@ -123,7 +170,7 @@ for desc, run of hooks
         afterEach run.after
 
         it "must be an instanceof Junction", ->
-          for jnt, i in @jntArray
+          for jnt in @jntArray
             expect(jnt).to.be.an.instanceof @jnt.Junction
 
         it "must be an instanceof Duplex Stream only", ->
@@ -154,45 +201,16 @@ for desc, run of hooks
       describe "junction's behaviour:", ->
 
         beforeEach run.before
-        afterEach run.after
+        afterEach ->
+         run.after.call @
+         # lets re-use the agents
+         for agent in spies.used
+            spies.free.push spies.used.pop()
 
-        async = (data, stream) ->
-          new Promise (res, rej) ->
-            stream.write data
-            setImmediate res
-
-        spy = (stream) ->
-          agent = sinon.spy()
-          iterator = stream._transform
-          stream._spy = agent
-          stream._transform = (c) ->
-            agent c
-            iterator.apply @, arguments
-          return agent
-
-        addToTestContext2 = ->
-          @stA = @ea (c) -> @push c
-          @stB = @ea (c) -> @push c
-          @stX = @ea (c) -> @push c
-          @stZ = @ea (c) -> @push c
-
-          @spyA = spy @stA
-          @spyB = spy @stB
-          @spyX = spy @stX
-          @spyZ = spy @stZ
-          @tests = []
-
-          @promise = (fn) =>
-            @tests.push async(@data, @stX).then fn
-
-          @resolve = (done) =>
-            Promise.all(@tests).then -> done()
-              .catch done
 
         it "must let data pass only through the junction's entry stream",  (done)->
-
-          for jnt, i in @jntArray
-            do (jnt, i) =>
+          for jnt in @jntArray
+            do (jnt) =>
               addToTestContext2.call @
 
               jnt.entry.pipe @stA
@@ -201,16 +219,14 @@ for desc, run of hooks
               @stX.pipe jnt
 
               @promise =>
-                expect(@spyA).to.have.been.calledOnce.and.calledWith @data
+                expect(@spyA).to.have.been.calledOnce.and.calledWith @data1
                 expect(@spyB).to.not.have.been.called
 
           @resolve done
 
         it "must let data pass only through the junction's exit stream", (done)->
-          tests = []
-
-          for jnt, i in @jntArray
-            do (jnt, i) =>
+          for jnt in @jntArray
+            do (jnt) =>
               addToTestContext2.call @
 
               jnt.entry.pipe @stA
@@ -220,15 +236,13 @@ for desc, run of hooks
 
               @promise =>
                 expect(@spyA).to.not.have.been.called
-                expect(@spyB).to.have.been.calledOnce.and.calledWith @data
+                expect(@spyB).to.have.been.calledOnce.and.calledWith @data1
 
           @resolve done
 
         it "must let data pass through the junction's entry and exit stream", (done) ->
-          tests = []
-
-          for jnt, i in @jntArray
-            do (jnt, i) =>
+          for jnt in @jntArray
+            do (jnt) =>
               addToTestContext2.call @
 
               # creating a pipeline here
@@ -241,11 +255,138 @@ for desc, run of hooks
                 .pipe @stZ
 
               @promise =>
-                expect(@spyA).to.have.been.calledOnce.and.calledWith @data
-                expect(@spyB).to.have.been.calledOnce.and.calledWith @data
-                expect(@spyX).to.have.been.calledOnce.and.calledWith @data
-                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data
+                expect(@spyA).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyB).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data1
           
           @resolve done
+
+        it "must transform data at the junction's entry", (done) ->
+          data2 = @data2
+          transform = (c) -> @push data2
+
+          for jnt in @jntArray
+            do (jnt) =>
+              addToTestContext2.call @
+
+              jnt._entry = transform
+
+              # creating a pipeline
+              jnt.entry.pipe @stA
+              @stA.pipe @stB
+              @stB.pipe jnt.exit
+
+              @stX.pipe jnt
+                .pipe @stZ
+
+              @promise =>
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyA).to.have.been.calledOnce.and.calledWith @data2
+                expect(@spyB).to.have.been.calledOnce.and.calledWith @data2
+                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data2
+
+          @resolve done
+
+        it "must transform data at the junction's exit", (done)->
+          data2 = @data2
+          transform = (c) -> @push data2
+
+          for jnt in @jntArray
+            do (jnt) =>
+              addToTestContext2.call @
+
+              jnt._exit = transform
+
+              # creating a pipeline
+              jnt.entry.pipe @stA
+              @stA.pipe @stB
+              @stB.pipe jnt.exit
+
+              @stX.pipe jnt
+                .pipe @stZ
+
+              @promise =>
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyA).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyB).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data2
+
+          @resolve done
+
+        it "must transform data at the junction's entry and exit", (done) ->
+
+          data2 = @data2
+          transformEntry = (c) -> @push data2
+          data3 = @data3
+          transformExit = (c) -> @push data3
+
+          for jnt in @jntArray
+            do (jnt) =>
+              addToTestContext2.call @
+
+              jnt._entry = transformEntry
+              jnt._exit = transformExit
+
+              # creating a pipeline
+              jnt.entry.pipe @stA
+              @stA.pipe @stB
+              @stB.pipe jnt.exit
+
+              @stX.pipe jnt
+                .pipe @stZ
+
+              @promise =>
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyA).to.have.been.calledOnce.and.calledWith @data2
+                expect(@spyB).to.have.been.calledOnce.and.calledWith @data2
+                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data3
+
+          @resolve done
+
+        it "must transform data only within the junction's entry and exit", (done) ->
+
+          data2 = @data2
+          transformEntry = -> @push data2
+          data3 = @data3
+          transformExit = -> @push data3
+
+          data4 = @data4
+          transformA = -> @push data4
+
+          for jnt in @jntArray
+            do (jnt) =>
+              addToTestContext2.call @
+
+              jnt._entry = transformEntry
+              jnt._exit = transformExit
+              @stA._each = transformA
+
+              # creating a pipeline
+              jnt.entry.pipe @stA
+              @stA.pipe @stB
+              @stB.pipe jnt.exit
+
+              @stX.pipe jnt
+                .pipe @stZ
+
+              @promise =>
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyA).to.have.been.calledOnce.and.calledWith @data2
+                expect(@spyB).to.have.been.calledOnce.and.calledWith @data4
+                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data3
+
+          @resolve done
+
+
+
+
+
+
+
+
+
+
+
 
 

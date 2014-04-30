@@ -1,7 +1,12 @@
 PlatformStream = require('stream')
 Stream = require('readable-stream')
 
+{Junction} = require "super-stream/junction"
 
+isJunction = (stream) ->
+  if stream instanceof Junction
+    return true
+  return false
 
 isTransform = (stream) ->
   if stream instanceof Stream.Transform 
@@ -56,6 +61,7 @@ isStream = (stream) ->
 
 isStream.isStream = isStream
 
+isStream.isJunction = isJunction
 isStream.isReadable = isReadable
 isStream.isReadableOnly = isReadableOnly
 
