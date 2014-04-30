@@ -9,6 +9,7 @@ isNoop = require "super-stream/isNoop"
 
 Plexer = require "plexer"
 isFunction = require "lodash-node/modern/objects/isFunction"
+isObject = require "lodash-node/modern/objects/isObject"
 defaults = require "lodash-node/modern/objects/defaults"
 
 inherits = require "inherits"
@@ -18,14 +19,20 @@ inherits = require "inherits"
 factory = (cfg = {}) ->
   th2 = through.factory cfg
 
-  Junction = (opts = {}, entry, exit) ->
+  Junction = (opts, entry, exit) ->
     if not @ instanceof Junction
-      return new Junction opts
+      return new Junction opts, entry, exit
 
-    if arguments.length is 0
+    if isTransform opts
+      exit = entry
+      entry = opts
       opts = cfg
-    else
+
+    else if isObject opts
       opts = defaults opts, cfg
+
+    else if !opts
+      opts = cfg
 
     if !isTransform entry
       if !!entry then throw new Error "entry stream must be an instanceof Transform"
@@ -40,16 +47,18 @@ factory = (cfg = {}) ->
     @_entry = entry._transform
     @_exit = exit._transform
 
+    @_opts = opts
     Plexer.call @, opts, entry, exit
 
-    @_writable._transform = => return @_entry.apply @, arguments
-    @_readable._transform = => return @_exit.apply @, arguments
+    ctx = @
+    @_writable._transform = -> return ctx._entry.apply ctx, arguments
+    @_readable._transform = -> return ctx._exit.apply ctx, arguments
 
     return @
 
   inherits Junction, Plexer
 
-  fn = (opts, entry, exit) -> return new Junction opts, entry, exit
+  fn = (opts, entry, exit) -> return new Junction opts, entry, exit  
 
   fn.factory = factory
   fn.Junction = Junction

@@ -6,11 +6,46 @@ domain = require "domain"
 chai = require "chai"
 sinon = require "sinon"
 chai.use require "sinon-chai"
+# chai.use require "chai-as-promised"
 expect = chai.expect
 chai.config.showDiff = false
 
 junction = require "../src/junction"
 each = require "super-stream/each"
+through = require "super-stream/through"
+
+    # all possible junctions
+    # Transform only junctions being tested now.
+
+    # @jntA01 = @jnt @readableStream
+    # @jntA02 = @jnt @writableStream
+    # @jntA04 = @jnt @readableStream, @writableStream 
+    # @jntA05 = @jnt @writableStream, @readableStream
+
+    # @jntA06 = @jnt @readableStream, @transfromStream
+    # @jntA07 = @jnt @transfromStream, @readableStream 
+    # @jntA08 = @jnt @writableStream, @transformStream
+    # @jntA09 = @jnt @transformStream, @writableStream
+
+    # @jntB01 = @jnt @opts, @readableStream
+    # @jntB02 = @jnt @opts, @writableStream
+    # @jntB04 = @jnt @opts, @readableStream, @writableStream 
+    # @jntB05 = @jnt @opts, @writableStream, @readableStream
+
+    # @jntB06 = @jnt @opts, @readableStream, @transfromStream
+    # @jntB07 = @jnt @opts, @transfromStream, @readableStream 
+    # @jntB08 = @jnt @opts, @writableStream, @transformStream
+    # @jntB09 = @jnt @opts, @transformStream, @writableStream
+
+    # @jntB11 = @jnt null, @readableStream
+    # @jntB12 = @jnt null, @writableStream
+    # @jntB14 = @jnt null, @readableStream, @writableStream 
+    # @jntB15 = @jnt null, @writableStream, @readableStream
+
+    # @jntB16 = @jnt null, @readableStream, @transfromStream
+    # @jntB17 = @jnt null, @transfromStream, @readableStream 
+    # @jntB18 = @jnt null, @writableStream, @transformStream
+    # @jntB19 = @jnt null, @transformStream, @writableStream
 
 describe "exported value:", ->
 
@@ -25,194 +60,192 @@ describe "exported value:", ->
     expect(junction).to.have.property "Junction"
     expect(junction.Junction).to.be.an.instanceof Function
 
-beforeEachHook = Object.create null
+hooks = Object.create null
+
+addToTestContext = ->
+  ctx = @
+  @ea = each.factory @opts
+  @jnt = junction.factory @opts
+
+  # @opts2 = {objectMode: !@opts.objectMode}
+  # @ea2 = each.factory @opts2
+  # @jnt2 = junction.factory @opts2
+
+  @jntA00 = @jnt()
+  @jntA03 = @jnt @ea()
+  @jntA10 = @jnt @ea(), @ea()
+  
+  @jntB00 = @jnt @opts
+  @jntB03 = @jnt @opts, @ea()
+  @jntB10 = @jnt @opts, @ea(), @ea()
+  @jntB13 = @jnt  null, @ea()
+  @jntB20 = @jnt  null, @ea(), @ea()
+
+  @jntArray = [
+    @jntA00
+    @jntA03
+    @jntA10
+    @jntB00
+    @jntB03
+    @jntB10
+    @jntB13
+    @jntB20
+  ]
+
+hooks["junctions from `var jnt = junction.factory();`\n"] =  {
+  before: ->
+    @opts = {}
+    @data = new Buffer "data"
+    addToTestContext.call @
+
+  after: ->
+
+}
+
+hooks["junctions from `var jnt = junction.factory({objectMode: true});`\n"] =  {
+  before: ->
+    @opts = {objectMode: yes}
+    @data = "data"
+    addToTestContext.call @
+
+  after: ->
+
+}
+
+for desc, run of hooks
+  do (desc, run) ->
+
+    describe desc, ->
+
+      describe "returned junction:", ->
+
+        beforeEach run.before
+        afterEach run.after
+
+        it "must be an instanceof Junction", ->
+          for jnt, i in @jntArray
+            expect(jnt).to.be.an.instanceof @jnt.Junction
+
+        it "must be an instanceof Duplex Stream only", ->
+          for jnt in @jntArray
+            expect(jnt).to.be.an.instanceof Duplex
+            expect(jnt).to.not.be.an.instanceof Transform
+
+        it "must have #_entry and be an instanceof Function", ->
+          for jnt in @jntArray
+            expect(jnt).to.have.property "_entry"
+            expect(jnt._entry).to.be.an.instanceof Function
+
+        it "must have #entry and be an instanceof Transform", ->
+          for jnt in @jntArray
+            expect(jnt).to.have.property "entry"
+            expect(jnt.entry).to.be.an.instanceof Transform
 
-beforeEachHook["describing returned function from junction.factory():\n"] =  ->
-  @jnt = junction.factory()
-  @ea = each.factory()
-  @objMode = no
-  @data = new Buffer "data"
-  @data2 = new Buffer "data2"
-  @data3 = new Buffer "data3"
+        it "must have #_exit and be an instanceof Function", ->
+          for jnt in @jntArray
+            expect(jnt).to.have.property "_exit"
+            expect(jnt._exit).to.be.an.instanceof Function
+
+        it "must have #exit and be an instanceof Transform\n", ->
+          for jnt in @jntArray
+            expect(jnt).to.have.property "exit"
+            expect(jnt.exit).to.be.an.instanceof Transform
+
+      describe "junction's behaviour:", ->
+
+        beforeEach run.before
+        afterEach run.after
+
+        async = (data, stream) ->
+          new Promise (res, rej) ->
+            stream.write data
+            setImmediate res
+
+        spy = (stream) ->
+          agent = sinon.spy()
+          iterator = stream._transform
+          stream._spy = agent
+          stream._transform = (c) ->
+            agent c
+            iterator.apply @, arguments
+          return agent
 
-beforeEachHook["describing returned function from junction.factory({objectMode: true}):\n"] =  ->
-  @jnt = junction.factory {objectMode: yes}
-  @ea = each.factory {objectMode: yes}
-  @objMode = yes
-  @data = "data"
-  @data2 = "data2"
-  @data3 = "data3"
+        addToTestContext2 = ->
+          @stA = @ea (c) -> @push c
+          @stB = @ea (c) -> @push c
+          @stX = @ea (c) -> @push c
+          @stZ = @ea (c) -> @push c
 
-for desc, runFunction of beforeEachHook
+          @spyA = spy @stA
+          @spyB = spy @stB
+          @spyX = spy @stX
+          @spyZ = spy @stZ
+          @tests = []
 
-  describe desc, ->
+          @promise = (fn) =>
+            @tests.push async(@data, @stX).then fn
 
-    beforeEach runFunction
-    
-    afterEach -> @jnt = @objMode = @data = @data2 = undefined
+          @resolve = (done) =>
+            Promise.all(@tests).then -> done()
+              .catch done
 
-    describe "describing junction from junction():", ->
+        it "must let data pass only through the junction's entry stream",  (done)->
 
-      it "must be an instanceof Junction", ->
-        expect(@jnt()).to.be.an.instanceof @jnt.Junction
+          for jnt, i in @jntArray
+            do (jnt, i) =>
+              addToTestContext2.call @
 
-      it "must be an instanceof Duplex Stream only", ->
-        expect(@jnt()).to.be.an.instanceof Duplex
-        expect(@jnt()).to.not.be.an.instanceof Transform
+              jnt.entry.pipe @stA
+              jnt.exit.pipe @stB
 
-      it "must have #_entry be an instanceof Function", ->
-        expect(@jnt()).to.have.property "_entry"
-        expect(@jnt()._entry).to.be.an.instanceof Function
+              @stX.pipe jnt
 
-      it "must have #entry be an instanceof Transform", ->
-        expect(@jnt()).to.have.property "entry"
-        expect(@jnt().entry).to.be.an.instanceof Transform
+              @promise =>
+                expect(@spyA).to.have.been.calledOnce.and.calledWith @data
+                expect(@spyB).to.not.have.been.called
 
-      it "must have #_exit be an instanceof Function", ->
-        expect(@jnt()).to.have.property "_exit"
-        expect(@jnt()._exit).to.be.an.instanceof Function
+          @resolve done
 
-      it "must have #exit be an instanceof Transform", ->
-        expect(@jnt()).to.have.property "exit"
-        expect(@jnt().exit).to.be.an.instanceof Transform
+        it "must let data pass only through the junction's exit stream", (done)->
+          tests = []
 
-      describe "junction behaviour:", ->
+          for jnt, i in @jntArray
+            do (jnt, i) =>
+              addToTestContext2.call @
 
-        it "must let data pass only through the entry stream", ->
-          ctx = @
+              jnt.entry.pipe @stA
+              jnt.exit.pipe @stB
 
-          spyA = sinon.spy()
-          spyB = sinon.spy()
+              @stX.pipe jnt.exit
 
-          stX = @ea (c) ->
-            @next null, c
+              @promise =>
+                expect(@spyA).to.not.have.been.called
+                expect(@spyB).to.have.been.calledOnce.and.calledWith @data
 
-          stA = @ea (c) ->
-            spyA c
-            @next null, c
+          @resolve done
 
-          stB = @ea (c) ->
-            spyB c
-            @next null, c
+        it "must let data pass through the junction's entry and exit stream", (done) ->
+          tests = []
 
-          jnt = @jnt()
+          for jnt, i in @jntArray
+            do (jnt, i) =>
+              addToTestContext2.call @
 
-          jnt.entry.pipe stA
-          jnt.exit.pipe stB
+              # creating a pipeline here
+              jnt.entry.pipe @stA
+              @stA.pipe @stB
+              @stB.pipe jnt.exit
 
-          stX.pipe jnt
+              # piping into and out of junction
+              @stX.pipe jnt
+                .pipe @stZ
 
-          async = (data) ->
-            return new Promise (resolve, reject) ->
-              setTimeout resolve, 1
-              stX.write data
-
-          async(@data).then ->
-            expect(spyA).to.have.been.calledOnce
-            expect(spyA).to.have.been.calledWith ctx.data
-            expect(spyB).to.not.have.been.called
-
-        it "must let data pass only through the exit stream", ->
-          ctx = @
-
-          spyA = sinon.spy()
-          spyB = sinon.spy()
-
-          stX = @ea (c) ->
-            @next null, c
-
-          stA = @ea (c) ->
-            spyA c
-            @next null, c
-
-          stB = @ea (c) ->
-            spyB c
-            @next null, c
-
-
-          jnt = @jnt()
-
-          jnt.entry.pipe stA
-          jnt.exit.pipe stB
-
-          stX.pipe jnt.exit
-
-          async = (data) ->
-            return new Promise (resolve, reject) ->
-              setTimeout resolve, 1
-              stX.write data
-
-          async(@data).then ->
-            expect(spyA).to.not.have.been.called
-            expect(spyB).to.have.been.calledWith ctx.data
-            expect(spyB).to.have.been.calledOnce
-
-        it "must let data pass only through the entry and exit stream", ->
-          ctx = @
-
-          spyA = sinon.spy()
-          spyB = sinon.spy()
-
-          stX = @ea (c) ->
-            @next null, c
-
-          stA = @ea (c) ->
-            spyA c
-            @next null, c
-
-          stB = @ea (c) ->
-            spyB c
-            @next null, c
-
-          jnt = @jnt()
-
-          # creating a pipeline
-          stX.pipe jnt
-          jnt.entry.pipe stA
-          stA.pipe stB
-          jnt.exit.pipe stB
-
-          async = (data) ->
-            return new Promise (resolve, reject) ->
-              setTimeout resolve, 1
-              stX.write data
-
-          async(@data).then ->
-            expect(spyA).to.have.been.calledOnce
-            expect(spyA).to.have.been.calledWith ctx.data
-
-            expect(spyB).to.have.been.calledOnce
-            expect(spyB).to.have.been.calledWith ctx.data
-
-
-    describe "describing junction from junction({})", ->
-
-      it "must work", ->
-
-    describe "describing junction from junction({}, Readable)", ->
-
-      it "must work", ->
-
-    describe "describing junction from junction({}, Writable)", ->
-
-      it "must work", ->
-
-    describe "describing junction from junction({}, Readable, Writable)", ->
-
-      it "must work", ->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+              @promise =>
+                expect(@spyA).to.have.been.calledOnce.and.calledWith @data
+                expect(@spyB).to.have.been.calledOnce.and.calledWith @data
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data
+                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data
+          
+          @resolve done
 
 

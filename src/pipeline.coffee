@@ -28,37 +28,31 @@ factory = (cfg = {}) ->
     junction.Junction @, opts, entry, exit
 
 
-  inherits Pipeline, junction.Junction
+
 
 
   fn = (opts, streams) ->
-    console.log "SSSS"
-    return new Pipeline opts, streams
+    jnt = junction 
+    jnt._sections = streams
+
+    for st, i in jnt._sections
+      do (st, i) ->
+        stA = st
+
+        stA.on "error", (err) -> jnt.emit "error", err
+
+        if i is 0
+          jnt._writable.pipe stA
+
+        if i is jnt._sections.length - 1
+          return stA.pipe jnt._readable
+
+        stB = jnt._sections[i + 1]
+        stA.pipe stB
+
+    return jnt
 
   fn.factory = factory
-  fn.Pipeline = Pipeline
-
-
-  # pipeline = (opts, streams) ->
-  #   jnt = junction 
-  #   jnt._sections = streams
-
-  #   for st, i in jnt._sections
-  #     do (st, i) ->
-  #       stA = st
-
-  #       stA.on "error", (err) -> jnt.emit "error", err
-
-  #       if i is 0
-  #         jnt._writable.pipe stA
-
-  #       if i is jnt._sections.length - 1
-  #         return stA.pipe jnt._readable
-
-  #       stB = jnt._sections[i + 1]
-  #       stA.pipe stB
-
-  #   return jnt
 
   return fn
 
