@@ -22,7 +22,7 @@ isDuplex = (stream) ->
   return no
 
 isDuplexOnly = (stream) ->
-  if isDuplex(stream) and !isTransform(stream)
+  if isDuplex(stream) and !isTransform(stream) and !isJunction(stream)
     return yes
   return no
 
@@ -53,25 +53,30 @@ isWritable = (stream) ->
 
   return no 
 
-isStream = (stream) ->
-  if stream instanceof Stream
+isWritableOnly = (stream) ->
+  if stream instanceof Stream.Writable
     return yes
-    
-  if stream instanceof PlatformStream
-    return yes
-
   return no
+    
+# isStream = (stream) ->
+#   if stream instanceof Stream
+#     return yes
+    
+#   if stream instanceof PlatformStream
+#     return yes
 
-isStream.isStream = isStream
+#   return no
+
+module.exports = isStream = {}
 
 isStream.isJunction = isJunction
 isStream.isReadable = isReadable
 isStream.isReadableOnly = isReadableOnly
 
 isStream.isWritable = isWritable
+isStream.isWritableOnly = isWritableOnly
 isStream.isTransform = isTransform
 
 isStream.isDuplex = isDuplex
 isStream.isDuplexOnly = isDuplexOnly
 
-module.exports = isStream
