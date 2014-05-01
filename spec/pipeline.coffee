@@ -59,6 +59,26 @@ addToTestContext = ->
     @plnC03
   ]
 
+
+addToTestContext2 = ->
+  @stA = @ea (c) -> @push c
+  @stB = @ea (c) -> @push c
+  @stX = @ea (c) -> @push c
+  @stZ = @ea (c) -> @push c
+
+  @spyA = spy @stA
+  @spyB = spy @stB
+  @spyX = spy @stX
+  @spyZ = spy @stZ
+  @tests = []
+
+  @promise = (fn) =>
+    @tests.push async(@data1, @stX).then fn
+
+  @resolve = (done) =>
+    Promise.all(@tests).then -> done()
+      .catch done
+
 hooks = Object.create null
 
 hooks["junctions from `var pln = pipeline.factory();`\n"] =
@@ -109,31 +129,13 @@ spy = (stream) ->
 
   return agent
 
-addToTestContext2 = ->
-  @stA = @ea (c) -> @push c
-  @stB = @ea (c) -> @push c
-  @stX = @ea (c) -> @push c
-  @stZ = @ea (c) -> @push c
-
-  @spyA = spy @stA
-  @spyB = spy @stB
-  @spyX = spy @stX
-  @spyZ = spy @stZ
-  @tests = []
-
-  @promise = (fn) =>
-    @tests.push async(@data1, @stX).then fn
-
-  @resolve = (done) =>
-    Promise.all(@tests).then -> done()
-      .catch done
 
 describe "exported value:", ->
 
   it 'must be a function', -> 
     expect(pipeline).to.be.an.instanceof Function
 
-  it "must have #factory be an instanceof Function", ->
+  it "must have #factory and be an instanceof Function", ->
     expect(pipeline).to.have.property "factory"
     expect(pipeline.factory).to.be.an.instanceof Function
 

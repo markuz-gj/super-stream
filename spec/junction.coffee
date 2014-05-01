@@ -77,6 +77,25 @@ addToTestContext = ->
     @jntB20
   ]
 
+addToTestContext2 = ->
+  @stA = @ea (c) -> @push c
+  @stB = @ea (c) -> @push c
+  @stX = @ea (c) -> @push c
+  @stZ = @ea (c) -> @push c
+
+  @spyA = spy @stA
+  @spyB = spy @stB
+  @spyX = spy @stX
+  @spyZ = spy @stZ
+  @tests = []
+
+  @promise = (fn) =>
+    @tests.push async(@data1, @stX).then fn
+
+  @resolve = (done) =>
+    Promise.all(@tests).then -> done()
+      .catch done
+
 hooks = Object.create null
 
 hooks["junctions from `var jnt = junction.factory();`\n"] =
@@ -126,25 +145,6 @@ spy = (stream) ->
     iterator.apply @, arguments
 
   return agent
-
-addToTestContext2 = ->
-  @stA = @ea (c) -> @push c
-  @stB = @ea (c) -> @push c
-  @stX = @ea (c) -> @push c
-  @stZ = @ea (c) -> @push c
-
-  @spyA = spy @stA
-  @spyB = spy @stB
-  @spyX = spy @stX
-  @spyZ = spy @stZ
-  @tests = []
-
-  @promise = (fn) =>
-    @tests.push async(@data1, @stX).then fn
-
-  @resolve = (done) =>
-    Promise.all(@tests).then -> done()
-      .catch done
 
 describe "exported value:", ->
 
