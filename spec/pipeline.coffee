@@ -138,7 +138,7 @@ for desc, run of hooks
          for agent in spies.used
             spies.free.push spies.used.pop()
 
-        it "must let data passthrough", (done) ->
+        it "must always let data passthrough", (done) ->
           for pln in @plnArray
             do (pln) =>
               addToTestContext2.call @
@@ -152,7 +152,7 @@ for desc, run of hooks
 
           @resolve done
 
-        it "must transform it at the #_entry and let data passthrough", (done) ->
+        it "must transform data at the entry point if #_entry isn't noop", (done) ->
           data2 = @data2
           transform = (c) -> @push data2
 
@@ -161,100 +161,158 @@ for desc, run of hooks
               addToTestContext2.call @
               pln._entry = transform
 
+              spyEntry = spy pln.entry
+              spyExit = spy pln.exit
+
               @stX.pipe pln
                 .pipe @stZ
 
               @promise =>
                 expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyEntry).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyExit).to.have.been.calledOnce.and.calledWith @data2
                 expect(@spyZ).to.have.been.calledOnce.and.calledWith @data2
 
           @resolve done
 
-          # beforeEachHook = Object.create null
+        it "must transform data at the exit point if #_exit isn't noop", (done) ->
+          data2 = @data2
+          transform = (c) -> @push data2
 
-# beforeEachHook["describing returned function from pipeline.factory():\n"] =  ->
-#   @pln = pipeline.factory()
-#   @ea = each.factory()
-#   @objMode = no
-#   @data = new Buffer "data"
-#   @data2 = new Buffer "data2"
-#   @data3 = new Buffer "data3"
+          for pln in @plnArray
+            do (pln) =>
+              addToTestContext2.call @
+              pln._exit = transform
 
-# beforeEachHook["describing returned function from pipeline.factory({objectMode: true}):\n"] =  ->
-#   @pln = pipeline.factory {objectMode: yes}
-#   @ea = each.factory {objectMode: yes}
-#   @objMode = yes
-#   @data = "data"
-#   @data2 = "data2"
-#   @data3 = "data3"
+              spyEntry = spy pln.entry
+              spyExit = spy pln.exit
 
-# for desc, runFunction of beforeEachHook
+              @stX.pipe pln
+                .pipe @stZ
 
-#   describe desc, ->
+              @promise =>
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyEntry).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyExit).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data2
 
-#     beforeEach runFunction
-    
-#     afterEach -> @pln = @objMode = @data = @data2 = undefined
+          @resolve done
 
-#     describe "describing pipeline from pipeline():", ->
-#       it "must be an instanceof Pipeline", ->
+        # this two test are actually done on the following specs
+        # it "must be able two reset the entry and exit streams of a pipeline", ->
+
+        it "must transform at both points if #_entry and #_exit aren't noop", (done) ->
+          data2 = @data2
+          transformEntry = (c) -> @push data2
+
+          data3 = @data3
+          transformExit = (c) -> @push data3
+
+          for pln in @plnArray
+            do (pln) =>
+              addToTestContext2.call @
+
+              pln._entry = transformEntry
+              pln._exit = transformExit
+
+              spyEntry = spy pln.entry
+              spyExit = spy pln.exit
+
+              @stX.pipe pln
+                .pipe @stZ
+
+              @promise =>
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyEntry).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyExit).to.have.been.calledOnce.and.calledWith @data2
+                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data3
+
+          @resolve done
+
+        # this two test are actually done on the following specs
+        # it "must be able to reset a stream's transform once it is within a pipeline", ->
+
+        it "must transform data only within the pipeline's entry and exit points", (done) ->
+          data2 = @data2
+          transform = (c) -> @push data2
+
+          for pln in @plnArray
+            do (pln) =>
+              addToTestContext2.call @
+
+              # hacking into first stream of the pipeline
+              stream = pln._sections[0]
+              oldT = stream._transform
+              stream._transform = (c,e,n) ->
+                oldT.call @, data2, e, n
+
+              spyS = spy stream
+
+              @stX.pipe pln
+                .pipe @stZ
+
+              @promise =>
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyS).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyZ).to.have.been.calledOnce.and.calledWith @data2
+
+          @resolve done
+
+        it "must not let pass data get out of pipeline if #_exit === null", (done) ->
+
+          data2 = @data2
+          transform = (c) -> @push data2
+
+          for pln in @plnArray
+            do (pln) =>
+              addToTestContext2.call @
+
+              pln._exit = null
+              spyS = spy pln._sections[0]
+
+              @stX.pipe pln
+                .pipe @stZ
+
+              @promise =>
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyS).to.have.been.calledOnce.and.calledWith @data1
+                expect(@spyZ).to.not.have.been.called
+
+          @resolve done
+
+        it "must not let data get in of pipeline if #_entry === null", (done) ->
+
+          data2 = @data2
+          transform = (c) -> @push data2
+
+          for pln in @plnArray
+            do (pln) =>
+              addToTestContext2.call @
+
+              pln._entry = null
+
+              spyEntry = spy pln.entry
+              spyExit = spy pln.exit
+              spyS = spy pln._sections[0]
+
+              @stX.pipe pln
+                .pipe @stZ
+
+              @promise =>
+                expect(@spyX).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyEntry).to.have.been.calledOnce.and.calledWith @data1
+                expect(spyS).to.not.have.been.called
+                expect(spyExit).to.not.have.been.called
+                expect(@spyZ).to.not.have.been.called
+
+          @resolve done
 
 
 
-#         pl = pipeline()
-
-#         stA = each (c) -> 
-#           console.` 'a', c.toString()
-#           @push c
-
-#         stB = each (c) ->
-#           console.log 'b', c.toString()
-#           @push c
-
-#         # stA.pipe pl
-#         #   .pipe stB
-
-#         # stA.write "A"
-
-#         pl2 = pipeline [stA, pl, stB]
-
-#         stC = each (c) ->
-#           console.log 'c', c.toString()
-#           @push c
-
-#         stD = each (c) ->
-#           console.log "d", c.toString()
-#           @push c
-
-
-#         stE = each (c) ->
-#           console.log "e", c.toString()
-#           @push c
-
-#         stF = each (c) ->
-#           console.log "f", c.toString()
-#           @push c
-
-#         pl3 = pipeline [stC, pl2, stD]
-
-
-#         stE.pipe pl3
-#           .pipe stF
-
-#         stE.write "p"
-#         # stC.pipe pl2
-#         #   .pipe stD
-
-#         # stC.write 'p'
 
 
 
 
-
-#         # for k,i of pl
-#         #   console.log k
-#         # @pln()
-#       #   expect(@pln()).to.be.an.instanceof @pln.Pipeline
 
 
 

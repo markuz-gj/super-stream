@@ -207,7 +207,6 @@ for desc, run of hooks
          for agent in spies.used
             spies.free.push spies.used.pop()
 
-
         it "must let data pass only through the junction's entry stream",  (done)->
           for jnt in @jntArray
             do (jnt) =>
