@@ -14,7 +14,9 @@ inherits = require "inherits"
 
 # created fake npm package
 through = require "super-stream/through"
-{Junction} = require "super-stream/junction"
+junction = require "super-stream/junction"
+
+{Junction} = junction
 
 factory = (cfg = {}) ->
   th2 = through.factory cfg
@@ -25,7 +27,7 @@ factory = (cfg = {}) ->
       opts = cfg
       jnt = new Junction opts
 
-    else if isJunction opts
+    else if isJunction(opts)
       if isArray jnt
         streams = jnt
       else
@@ -42,9 +44,10 @@ factory = (cfg = {}) ->
     if !isArray streams
       streams = [through opts]
 
-    jnt._sections = streams
+    jnt._sections ?= []
+    jnt._sections.push streams
 
-    for st, i in jnt._sections
+    for st, i in streams
       do (st, i) =>
         stA = st
 
@@ -53,16 +56,15 @@ factory = (cfg = {}) ->
         if i is 0
           jnt._writable.pipe stA
 
-        if i is jnt._sections.length - 1
+        if i is streams.length - 1
           return stA.pipe jnt._readable
 
-        stB = jnt._sections[i + 1]
+        stB = streams[i + 1]
         stA.pipe stB
 
     return jnt
 
   fn.factory = factory
-
   return fn
 
 module.exports = factory()

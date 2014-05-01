@@ -1,10 +1,13 @@
 PlatformStream = require('stream')
 Stream = require('readable-stream')
 
-{Junction} = require "super-stream/junction"
+junction = require "super-stream/junction"
+
+# {Junction} = junction
+# {JunctionB} = junction.factory({objectMode: yes})
 
 isJunction = (stream) ->
-  if stream instanceof Junction
+  if stream instanceof junction.Junction
     return true
   return false
 

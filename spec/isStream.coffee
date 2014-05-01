@@ -1,6 +1,6 @@
 domain = require "domain"
 
-{Transform, Readable} = require "readable-stream"
+{Transform, Readable, Duplex} = require "readable-stream"
 {Promise} = require "es6-promise"
 
 chai = require "chai"
@@ -9,22 +9,25 @@ chai.use require "sinon-chai"
 expect = chai.expect
 chai.config.showDiff = false
 
-junction = require "../src/junction"
+junction = require "super-stream/junction"
+isStream = require "../src/isStream"
 
+{isJunction, isDuplex} = isStream
 # created fake npm package
 each = require "super-stream/each"
 
 describe "exported value:", ->
 
   it 'should be a function', -> 
-    expect(junction).to.be.an.instanceof Function
+    expect(isStream).to.be.an.instanceof Function
 
-  it "should have #factory property", -> 
-    expect(junction).to.have.property "factory"
+  it 'should have property isJunction', ->
+    expect(isStream).to.have.property 'isJunction'
 
+describe "isStream's behaviour", ->
 
-  it "should work", ->
-    jnt = junction()
+  it "should detect a junction", ->
+    expect(isJunction junction()).to.be.true
 
 # beforeEachHook = Object.create null
 
