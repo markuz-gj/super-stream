@@ -24,3 +24,6 @@ describe "exported value:", ->
 
   it "should return false for a regular stream", ->
     expect(isNoop([{}, new Function()])).to.be.false
+
+
+
