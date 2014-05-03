@@ -43,6 +43,13 @@ GLOBS =
 
   etc:
     src: ["#{ETC}/**/*.coffee"]
+
+  spec:
+    src: ["{#{SRC},#{ETC}}/*.coffee"]
+    dest: "./#{DIST}/"
+    tmp: "./#{TMP}/"
+    dist: "./#{DIST}/**/*.js"
+    ext: ".js"
 #   mocha:
 #     src: ["#{SPEC}/*.coffee"]
 
@@ -152,43 +159,53 @@ logFile = (evt) ->
   return file
 
 logStream = each (f) ->
-  # console.log f._time
   logFile f
   @push f
 
-pl =
-  coffee: pln [
+watcher = (name, glob, handler) ->
+  gulp.task name, ->
+    gulp.watch glob, (evt) ->
+      logFile evt
+      evt._eventStart = process.hrtime()
+      task = handler.call @, evt
+      task.pipe each (f) ->
+        console.log 'pppppp'
+#       f._startTime = process.hrtime()
+#       st = each()
+#       st.pipe pl.coffee
+#       st.write f
+
+JNT = pln()
+
+
+
+
+pln JNT, [
     coffee {bare: yes}
     gulp.dest GLOBS.coffee.tmp
     logStream
   ]
 
-
-# time = (vfs) ->
-#   vfs._ = 
-
-#   return vfs
-
-job = 
-  coffee: -> 
+pln JNT, [
     each (f) ->
-      f._startTime = process.hrtime()
-      st = each().pipe pl.coffee
-      st.write f
+      console.log 'llll'
+  ]
 
-gulp.task "watch:etc", ->
-  gulp.watch GLOBS.etc.src, (evt) ->
-    logFile evt
+watcher "watch:src", GLOBS.coffee.src, (evt) -> 
+  gulp.src evt.path
+    .pipe JNT
 
+
+watcher "watch:etc", GLOBS.etc.src, (evt) ->
     if match evt.path, '**/*gulp*.coffee'
       log bold red "::: Existing gulp task now :::"
       process.exit 13
       return
 
     gulp.src evt.path
-      .pipe job.coffee()
+      .pipe JNT
 
-gulp.task "watch", ["watch:etc"]
+gulp.task "watch", ["watch:etc", "watch:src"]
 
 gulp.task "default", ["watch"]
 # gulp.task "assets", ["coffee"]
@@ -204,3 +221,32 @@ gulp.task "default", ["watch"]
 #     .pipe watch {emitOnGlob: no}
 #     .pipe coffee {bare: yes}
 #     .pipe job
+
+
+# job = 
+#   spec: ->
+#     each (f) ->
+#       f._startTime = process.hrtime()
+#       st = each()
+#       st.pipe pl.spec
+#       st.write f
+
+#   etc: ->
+#     each (f) ->
+#       f._startTime = process.hrtime()
+#       st = each()
+#       st.pipe pl.coffee
+#       st.write f
+
+#   coffee: -> 
+#     each (f, cfg = opts) ->
+#       f._startTime = process.hrtime()
+#       st = each()
+#       st.pipe pl.coffee
+#       st.write f
+
+# watcher "watch:spec", GLOBS.coffee.src, (evt) -> 
+#   gulp.src evt.path
+#     .pipe job.spec()
+
+
