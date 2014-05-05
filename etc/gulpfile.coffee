@@ -166,35 +166,32 @@ watcher = (name, glob, handler) ->
   gulp.task name, ->
     gulp.watch glob, (evt) ->
       logFile evt
-      evt._eventStart = process.hrtime()
-      task = handler.call @, evt
-      task.pipe each (f) ->
-        console.log 'pppppp'
-#       f._startTime = process.hrtime()
-#       st = each()
-#       st.pipe pl.coffee
-#       st.write f
+      handler.call @, evt
+
+
 
 JNT = pln()
 
 
+logTime = each (f) ->
+  console.log f
+  @push f
 
 
-pln JNT, [
+pl =
+  coffee: pln JNT, [
     coffee {bare: yes}
     gulp.dest GLOBS.coffee.tmp
     logStream
   ]
-
-pln JNT, [
-    each (f) ->
-      console.log 'llll'
-  ]
+  # spec: pln JNT, [
+  #   each (f) ->
+  # ]
 
 watcher "watch:src", GLOBS.coffee.src, (evt) -> 
   gulp.src evt.path
+    .pipe logTime
     .pipe JNT
-
 
 watcher "watch:etc", GLOBS.etc.src, (evt) ->
     if match evt.path, '**/*gulp*.coffee'
