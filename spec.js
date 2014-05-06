@@ -1,4 +1,4 @@
-var chai, expect, sinon, through;
+var SuperStream, chai, expect, sinon;
 
 chai = require("chai");
 
@@ -10,10 +10,10 @@ expect = chai.expect;
 
 chai.config.showDiff = false;
 
-through = require("./through");
+SuperStream = require("./super-stream");
 
 describe("exported value:", function() {
-  return it('must be a function', function() {
-    return expect(through).to.be.an["instanceof"](Function);
+  return it('must be a Object', function() {
+    return expect(SuperStream).to.be.an["instanceof"](Object);
   });
 });

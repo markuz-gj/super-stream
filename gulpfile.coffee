@@ -9,10 +9,10 @@ gulp = require "gulp"
 {colors, log} = require "gulp-util"
 {bold, red} = colors
 
-through = require './through'
+through = require 'super-stream-through'
 {mocha, istanbul, reboot} = require "./etc"
 
-SRC = "./through.coffee"
+SRC = "./super-stream.coffee"
 SPEC = "./spec.coffee"
 
 gulp.task "compile:coffee", -> 

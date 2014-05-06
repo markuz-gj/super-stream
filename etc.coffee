@@ -12,7 +12,7 @@ gulp = require "gulp"
 {colors, log, replaceExtension} = require "gulp-util"
 {bold, red} = colors
 
-through = require './through'
+through = require 'super-stream-through'
 th = through.obj
 
 ###*

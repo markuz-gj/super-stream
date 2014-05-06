@@ -6,9 +6,9 @@ chai.use require "sinon-chai"
 expect = chai.expect
 chai.config.showDiff = no
 
-through = require "./through"
+SuperStream = require "./super-stream"
 
 
 describe "exported value:", ->
-  it 'must be a function', ->
-    expect(through).to.be.an.instanceof Function
+  it 'must be a Object', ->
+    expect(SuperStream).to.be.an.instanceof Object
