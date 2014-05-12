@@ -1,8 +1,8 @@
 {
   "name": "super-stream",
   "version": "0.0.0",
-  "description": "Transform stream utilities",
-  "main": "through.js",
+  "description": "transform stream utilities",
+  "main": "super-stream.js",
   "scripts": {
     "test": "sh build.sh test"
   },
@@ -16,23 +16,30 @@
     "pipeline",
     "Stream"
   ],
-  "author": "me",
+  "author": "Markuz GJ",
+  "repository": "git://github.com/markuz-gj/super-stream.git",
   "license": "MIT",
   "dependencies": {
-    "lodash.defaults": "^2.4.1",
-    "lodash.isfunction": "^2.4.1",
-    "through2": "^0.4.1"
+    "super-stream.through": "^0.0.0"
   },
   "devDependencies": {
     "chai": "^1.9.1",
     "coffee-script": "^1.7.1",
+    "connect": "^2.15.0",
+    "connect-livereload": "^0.4.0",
     "es6-promise": "^1.0.0",
+    "express": "^4.1.2",
     "gulp": "^3.6.2",
     "gulp-coffee": "^1.4.2",
+    "gulp-jsdoc": "^0.1.4",
+    "gulp-livereload": "^1.5.0",
     "gulp-util": "^2.2.14",
     "istanbul": "^0.2.8",
+    "markdown-middleware": "^0.1.5",
     "mocha": "^1.18.2",
+    "readable-stream": "^1.0.27-1",
     "sinon": "^1.9.1",
-    "sinon-chai": "^2.5.0"
+    "sinon-chai": "^2.5.0",
+    "tiny-lr": "0.0.7"
   }
 }

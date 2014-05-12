@@ -35,7 +35,7 @@ factory = function(options) {
   }
   OPTIONS = options;
   return {
-    through: require("super-stream-through").factory(OPTIONS),
+    through: require("super-stream.through").factory(OPTIONS),
     factory: factory
   };
 };

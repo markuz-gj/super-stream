@@ -23,11 +23,13 @@ OPTIONS = {}
  * @param {Object=} options - Set through default options.
  * @returns {SuperStream}
  ###
+ #
+
 factory = (options = {}) ->
   OPTIONS = options
 
   return {
-    through: require("super-stream-through").factory OPTIONS
+    through: require("super-stream.through").factory OPTIONS
     factory: factory
   }
 
