@@ -12,7 +12,7 @@ expect = chai.expect;
 
 chai.config.showDiff = false;
 
-ss = require("./super-stream");
+ss = require("./index");
 
 describe("exported value:", function() {
   it('must be a Object', function() {

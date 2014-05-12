@@ -1,16 +1,15 @@
+###
+  * README.md intro
+  * @desc 
+  * ##\# warning: this is not ready for consuption yet
+  ###
+
 ###*
  * @module super-stream
- * @author Marcos GJ 
+ * @author Markuz GJ 
  * @license MIT
  ###
 
-###*
- * @global
- * @type Object
- * @default {}
- * @desc default options passed to through2 if none is provided
- ###
-OPTIONS = {}
 
 ###*
  * @typedef {Object} SuperStream
@@ -18,7 +17,6 @@ OPTIONS = {}
  ###
 
 ###* 
- * @desc A factory function
  * @type Function
  * @param {Object=} options - Set through default options.
  * @returns {SuperStream}

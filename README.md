@@ -1,2 +1,2 @@
-default options passed to through2 if none is provided
-A factory function
+
+### warning: this is not ready for consuption yet

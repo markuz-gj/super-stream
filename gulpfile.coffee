@@ -10,7 +10,7 @@ gulp = require "gulp"
 
 {mocha, istanbul, exit, server, jsdoc, coffee} = require "./etc"
 
-SRC = "./super-stream.coffee"
+SRC = "./index.coffee"
 SPEC = "./spec.coffee"
 FIXTURE = "./fixture.coffee"
 ETC = "./etc.coffee"

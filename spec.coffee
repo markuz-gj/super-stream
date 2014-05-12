@@ -8,7 +8,7 @@ chai.use require "sinon-chai"
 expect = chai.expect
 chai.config.showDiff = no
 
-ss = require "./super-stream"
+ss = require "./index"
 
 
 describe "exported value:", ->

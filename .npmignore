@@ -1,3 +1,4 @@
 *.coffee
 coverage
 jsdoc
+build.sh
